@@ -1,0 +1,90 @@
+# ---------------------------------------------------------------- #
+# AI 기본 설정
+# ---------------------------------------------------------------- #
+language: ko-KR
+# 최대 250자
+tone_instructions: >
+  자바 네트워크·동시성 과제를 함께 하는 리뷰어입니다. 문제의 원인과 고치는 방법을 구체적으로 쓰고,
+  동시성 문제는 어떤 순서로 실행될 때 깨지는지 예시를 드세요. 관련 자바 공식 문서를 함께 알려주세요. 칭찬은 짧게.
+
+# ---------------------------------------------------------------- #
+# 코드 리뷰
+# ---------------------------------------------------------------- #
+reviews:
+  profile: chill
+  # CodeRabbit 코멘트를 모두 resolve해도 자동 Approve하지 않음. 머지 판단은 팀원이 함
+  request_changes_workflow: false
+  high_level_summary: true
+  # PR 본문이 길어지지 않게 끔
+  changed_files_summary: false
+  sequence_diagrams: false
+  assess_linked_issues: true
+  related_issues: false
+  related_prs: false
+  suggested_labels: false
+  auto_apply_labels: false
+  suggested_reviewers: false
+  auto_assign_reviewers: false
+  poem: true
+
+  # 생성 파일은 리뷰하지 않음
+  path_filters:
+    - "!gradle/wrapper/**"
+    - "!gradlew"
+    - "!gradlew.bat"
+
+  # 경로별 지침 (각 최대 2,000자)
+  path_instructions:
+    - path: "src/main/java/**"
+      instructions: |
+        Java 25 + Swing(FlatLaf) + TCP 소켓으로 만드는 2~4인 실시간 미니게임입니다. docs/architecture.md의 구조를 기준으로 리뷰해주세요.
+        1. 동시성: 여러 스레드가 같은 상태를 건드리는 곳을 찾아주세요. 원자적이지 않은 check-then-act, 갱신 손실, volatile 누락으로 인한 가시성 문제, 락 순서가 달라 생기는 데드락, 바쁜 대기(busy-wait)를 확인하고, 깨지는 실행 순서를 예로 들어주세요.
+        2. 서버 구조: 게임 상태는 게임 루프 스레드 하나만 바꿔야 합니다. 수신 스레드는 파싱 후 입력 큐에 넣기만, 송신은 Session의 송신 큐(LinkedBlockingQueue)를 통해서만 해야 합니다. Socket에 직접 쓰는 코드가 있으면 지적해주세요.
+        3. 판정은 서버에서만 합니다. 클라이언트가 결과를 정하거나, 전원 공개 전에 다른 플레이어의 선택을 broadcast하는 코드가 있으면 지적해주세요.
+        4. Swing: 네트워크 스레드에서 UI를 직접 바꾸면 안 되고 SwingUtilities.invokeLater로 EDT에 넘겨야 합니다. EDT에서 소켓 I/O나 긴 작업을 하는지도 봐주세요.
+        5. 연결 관리: 접속 종료·예외 시 소켓과 스레드가 정리되는지, InterruptedException을 삼키지 않는지, setTcpNoDelay와 heartbeat가 빠지지 않았는지 확인해주세요.
+        6. 메시지: sealed interface + record + switch 패턴을 지키는지, 플레이어 수를 2명으로 박아 두지 않았는지(목록 + playerId) 확인해주세요.
+        7. 지적은 꼭 필요한 것만 해당 라인에 남기고, 사소한 스타일은 요약에 모아주세요.
+        8. 게임 로직(판정, 점수, 탈락)에 테스트가 없으면 어떤 테스트가 필요한지 제안해주세요. 네트워크 없이 로직만 단위 테스트할 수 있게 분리됐는지도 봐주세요.
+    - path: "src/test/java/**"
+      instructions: |
+        1. 동시성 테스트가 우연히 통과하는 구조가 아닌지 봐주세요 (sleep에 기대는 대기, 실행 순서를 보장하지 않는 검증).
+        2. 테스트 이름만 보고 무엇을 검증하는지 알 수 있는지 확인해주세요.
+    - path: "docs/**"
+      instructions: |
+        1. 코드나 다른 문서와 내용이 어긋나는 곳을 찾아주세요 (예: architecture.md와 minigames.md의 스레드 구조).
+        2. 같은 사실을 두 문서에 적었으면 한쪽을 단일 출처로 두고 링크로 넘기라고 제안해주세요.
+        3. 파일 목록·디렉토리 구조처럼 코드에서 바로 알 수 있는 내용은 빼라고 제안해주세요.
+
+  # ---------------------------------------------------------------- #
+  # 자동 리뷰 트리거
+  # ---------------------------------------------------------------- #
+  auto_review:
+    # PR이 열리면 자동 리뷰. false면 `@coderabbitai review` 코멘트로 시작
+    enabled: true
+    # 새 커밋마다 다시 리뷰하지 않음. 필요하면 `@coderabbitai review`
+    auto_incremental_review: false
+
+# ---------------------------------------------------------------- #
+# 채팅
+# ---------------------------------------------------------------- #
+chat:
+  auto_reply: true
+
+# ---------------------------------------------------------------- #
+# 지식 기반
+# ---------------------------------------------------------------- #
+knowledge_base:
+  web_search:
+    enabled: true
+  # 설계 기준 문서. 코드 컨벤션 문서를 만들면 여기에 추가
+  code_guidelines:
+    enabled: true
+    filePatterns:
+      - docs/architecture.md
+  learnings:
+    scope: local
+  issues:
+    scope: local
+  pull_requests:
+    scope: local
