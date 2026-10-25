@@ -13,7 +13,8 @@ tone_instructions: >
 reviews:
   profile: chill
   # CodeRabbit 코멘트를 모두 resolve해도 자동 Approve하지 않음. 머지 판단은 팀원이 함
-  request_changes_workflow: false
+  auto_approvals:
+    enabled: false
   high_level_summary: true
   # PR 본문이 길어지지 않게 끔
   changed_files_summary: false
