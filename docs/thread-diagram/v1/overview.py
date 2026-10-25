@@ -1,62 +1,68 @@
-"""v1 전체도. 실행: python docs/thread-diagram/v1/overview.py"""
+"""v1 전체도. 실행하면 같은 디렉터리에 overview.svg를 만든다.
+
+python docs/thread-diagram/v1/overview.py
+"""
 
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  # canvas.py 위치
-from canvas import Canvas
+HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE.parent))  # svg.py 위치
+from svg import Diagram
 
-c = Canvas(92, 34)
+d = Diagram(1000, 660)
 
 # 제목
-c.box(4, 0, 17, 2, ["Client A"])
-c.box(52, 0, 77, 2, ["Server 100.x.x.x:5000"])
+d.node(60, 24, 160, 40, "title", ["Client A"])
+d.node(560, 24, 300, 40, "title", ["Server  100.x.x.x:5000"])
 
 # 클라이언트 A
-c.box(0, 4, 21, 23)
-c.box(3, 6, 18, 8, ["Input (main)"])
-c.v(10, 9, 9); c.put(10, 10, "v")
-c.box(3, 11, 18, 13, ["sendQueue"])
-c.v(10, 14, 14); c.put(10, 15, "v")
-c.box(3, 16, 18, 18, ["Send"])
-c.box(3, 19, 18, 21, ["Recv -> print"])
+d.rect(20, 84, 240, 300, "process", r=12)
+d.node(50, 104, 180, 44, "thread", ["Input (main)"])
+d.node(50, 172, 180, 44, "queue", ["outbox"])
+d.node(50, 242, 180, 44, "thread", ["Writer"])
+d.node(50, 312, 180, 44, "thread", ["Reader", "출력"])
+d.arrow([(140, 148), (140, 170)], "send")
+d.arrow([(140, 216), (140, 240)], "send")
 
 # 클라이언트 B
-c.box(2, 25, 19, 30)
-c.put(4, 26, "Recv")
-c.put(4, 27, "Client B")
-c.put(4, 28, "(same as A)")
-c.put(4, 29, "Send")
+d.rect(20, 440, 240, 160, "process", r=12)
+d.text(140, 520, "Client B", weight=600)
+d.text(140, 542, "(A와 같은 구조)", size=13, weight=400, color="#57606a")
 
 # 서버
-c.box(34, 4, 90, 33)
-c.box(70, 6, 88, 8, ["Accept"])
-c.put(66, 9, "new client ->")
-c.put(66, 10, "Recv + Send")
+d.rect(380, 84, 600, 556, "process", r=12)
+d.node(790, 104, 170, 44, "thread", ["Acceptor"])
+d.text(875, 166, "접속마다 Reader·Writer 생성", size=12, weight=400, color="#57606a")
+d.node(600, 170, 180, 56, "queue", ["inbox", "(from, msg)"])
+d.node(600, 296, 180, 76, "loop", ["GameLoop ×1", "20~30Hz", "세션 목록 소유"])
 
-c.box(56, 12, 73, 14, ["inputQueue"])
-c.v(64, 15, 16); c.put(64, 17, "v")
-c.box(56, 18, 73, 22, ["GameLoop", "1 thread", "20~30Hz"])
-
-# 서버 테두리(x=34)에 걸친 세션 스레드.
-# 받는 길(Recv -> inputQueue)과 보내는 길(GameLoop -> Send)이 교차하지 않게 A는 Recv/Send, B는 Send/Recv 순서
-for y1, label in ((16, "Recv A"), (19, "Send A [Q]"), (25, "Send B [Q]"), (28, "Recv B")):
-    c.box(28, y1, 47, y1 + 2, [label], lx=36)
-    c.g[y1][34] = "+"; c.g[y1 + 1][34] = "|"; c.g[y1 + 2][34] = "+"
+# 서버 테두리에 걸친 세션 스레드.
+# 받는 길과 보내는 길이 교차하지 않게 A는 Reader/Writer, B는 Writer/Reader 순서
+# Writer는 자기 outbox를 가지므로 노란 박스에 outbox를 함께 적는다
+for y, kind, label in ((240, "thread", "Reader A"), (310, "queue", "Writer A"),
+                       (460, "queue", "Writer B"), (530, "thread", "Reader B")):
+    d.rect(320, y, 170, 48, kind)
+    if kind == "queue":
+        d.text(440, y + 17, label, weight=600)
+        d.text(440, y + 35, "+ outbox", size=12, weight=400, color="#57606a")
+    else:
+        d.text(440, y + 24, label, weight=600)
+d.line(380, 96, 380, 628)  # 테두리를 박스 위로 다시 그어 "걸친" 모양을 만든다
 
 # TCP
-c.h(17, 19, 26); c.put(22, 17, "TCP"); c.put(27, 17, ">")
-c.put(19, 20, "<"); c.h(20, 20, 27); c.put(22, 20, "TCP")
-c.put(20, 26, "<"); c.h(26, 21, 27); c.put(22, 26, "TCP")
-c.h(29, 20, 26); c.put(22, 29, "TCP"); c.put(27, 29, ">")
+d.arrow([(230, 264), (318, 264)], "tcp", "TCP", (275, 264))
+d.arrow([(320, 334), (232, 334)], "tcp", "TCP", (275, 334))
+d.arrow([(320, 484), (262, 484)], "tcp", "TCP", (290, 484))
+d.arrow([(260, 554), (318, 554)], "tcp", "TCP", (290, 554))
 
-# Recv A -> inputQueue
-c.h(17, 48, 49); c.g[17][50] = "+"; c.v(50, 14, 16); c.g[13][50] = "+"; c.h(13, 51, 54); c.put(55, 13, ">")
-# Recv B -> 아래로 돌아 오른쪽에서 inputQueue
-c.h(29, 48, 85); c.g[29][86] = "+"; c.v(86, 14, 28); c.g[13][86] = "+"; c.h(13, 75, 85); c.put(74, 13, "<")
-# GameLoop -> Send A
-c.put(48, 20, "<"); c.h(20, 49, 55)
-# GameLoop -> Send B
-c.h(21, 52, 55); c.g[21][51] = "+"; c.v(51, 22, 25); c.g[26][51] = "+"; c.h(26, 49, 50); c.put(48, 26, "<")
+# 받는 길: Reader -> inbox
+d.arrow([(490, 264), (540, 264), (540, 198), (598, 198)], "recv")
+d.arrow([(490, 554), (940, 554), (940, 198), (782, 198)], "recv")
+# 큐 -> GameLoop
+d.arrow([(690, 226), (690, 294)], "loop")
+# 보내는 길: GameLoop -> outbox -> Writer
+d.arrow([(600, 334), (492, 334)], "send")
+d.arrow([(600, 356), (560, 356), (560, 484), (492, 484)], "send")
 
-print(c.render())
+d.save(HERE / "overview.svg")

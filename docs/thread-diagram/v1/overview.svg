@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 660" width="1000" height="660" font-family="Pretendard, 'Malgun Gothic', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif">
+<rect width="1000" height="660" rx="12" fill="#ffffff"/>
+<defs><marker id="arrow-tcp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#57606a"/></marker><marker id="arrow-recv" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#0969da"/></marker><marker id="arrow-loop" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#1a7f37"/></marker><marker id="arrow-send" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#bf8700"/></marker></defs>
+<rect x="60" y="24" width="160" height="40" rx="8" fill="#ffffff" stroke="#57606a" stroke-width="1.6"/>
+<text x="140.0" y="44.0" font-size="15" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">Client A</text>
+<rect x="560" y="24" width="300" height="40" rx="8" fill="#ffffff" stroke="#57606a" stroke-width="1.6"/>
+<text x="710.0" y="44.0" font-size="15" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">Server  100.x.x.x:5000</text>
+<rect x="20" y="84" width="240" height="300" rx="12" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.6"/>
+<rect x="50" y="104" width="180" height="44" rx="8" fill="#ffffff" stroke="#0969da" stroke-width="1.6"/>
+<text x="140.0" y="126.0" font-size="15" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">Input (main)</text>
+<rect x="50" y="172" width="180" height="44" rx="8" fill="#fff8c5" stroke="#bf8700" stroke-width="1.6"/>
+<text x="140.0" y="194.0" font-size="15" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">outbox</text>
+<rect x="50" y="242" width="180" height="44" rx="8" fill="#ffffff" stroke="#0969da" stroke-width="1.6"/>
+<text x="140.0" y="264.0" font-size="15" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">Writer</text>
+<rect x="50" y="312" width="180" height="44" rx="8" fill="#ffffff" stroke="#0969da" stroke-width="1.6"/>
+<text x="140.0" y="324.0" font-size="15" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">Reader</text>
+<text x="140.0" y="344.0" font-size="13" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">출력</text>
+<path d="M 140 148 L 140 170" fill="none" stroke="#bf8700" stroke-width="1.8" marker-end="url(#arrow-send)"/>
+<path d="M 140 216 L 140 240" fill="none" stroke="#bf8700" stroke-width="1.8" marker-end="url(#arrow-send)"/>
+<rect x="20" y="440" width="240" height="160" rx="12" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.6"/>
+<text x="140" y="520" font-size="15" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">Client B</text>
+<text x="140" y="542" font-size="13" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">(A와 같은 구조)</text>
+<rect x="380" y="84" width="600" height="556" rx="12" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.6"/>
+<rect x="790" y="104" width="170" height="44" rx="8" fill="#ffffff" stroke="#0969da" stroke-width="1.6"/>
+<text x="875.0" y="126.0" font-size="15" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">Acceptor</text>
+<text x="875" y="166" font-size="12" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">접속마다 Reader·Writer 생성</text>
+<rect x="600" y="170" width="180" height="56" rx="8" fill="#fff8c5" stroke="#bf8700" stroke-width="1.6"/>
+<text x="690.0" y="188.0" font-size="15" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">inbox</text>
+<text x="690.0" y="208.0" font-size="13" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">(from, msg)</text>
+<rect x="600" y="296" width="180" height="76" rx="8" fill="#dafbe1" stroke="#1a7f37" stroke-width="1.6"/>
+<text x="690.0" y="314.0" font-size="15" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">GameLoop ×1</text>
+<text x="690.0" y="334.0" font-size="13" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">20~30Hz</text>
+<text x="690.0" y="354.0" font-size="13" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">세션 목록 소유</text>
+<rect x="320" y="240" width="170" height="48" rx="8" fill="#ffffff" stroke="#0969da" stroke-width="1.6"/>
+<text x="440" y="264" font-size="15" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">Reader A</text>
+<rect x="320" y="310" width="170" height="48" rx="8" fill="#fff8c5" stroke="#bf8700" stroke-width="1.6"/>
+<text x="440" y="327" font-size="15" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">Writer A</text>
+<text x="440" y="345" font-size="12" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">+ outbox</text>
+<rect x="320" y="460" width="170" height="48" rx="8" fill="#fff8c5" stroke="#bf8700" stroke-width="1.6"/>
+<text x="440" y="477" font-size="15" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">Writer B</text>
+<text x="440" y="495" font-size="12" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">+ outbox</text>
+<rect x="320" y="530" width="170" height="48" rx="8" fill="#ffffff" stroke="#0969da" stroke-width="1.6"/>
+<text x="440" y="554" font-size="15" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">Reader B</text>
+<line x1="380" y1="96" x2="380" y2="628" stroke="#8c959f" stroke-width="1.6"/>
+<path d="M 230 264 L 318 264" fill="none" stroke="#57606a" stroke-width="1.8" marker-end="url(#arrow-tcp)"/>
+<rect x="257" y="254" width="36" height="18" rx="4" fill="#ffffff"/>
+<text x="275" y="264" font-size="11" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#57606a">TCP</text>
+<path d="M 320 334 L 232 334" fill="none" stroke="#57606a" stroke-width="1.8" marker-end="url(#arrow-tcp)"/>
+<rect x="257" y="324" width="36" height="18" rx="4" fill="#ffffff"/>
+<text x="275" y="334" font-size="11" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#57606a">TCP</text>
+<path d="M 320 484 L 262 484" fill="none" stroke="#57606a" stroke-width="1.8" marker-end="url(#arrow-tcp)"/>
+<rect x="272" y="474" width="36" height="18" rx="4" fill="#ffffff"/>
+<text x="290" y="484" font-size="11" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#57606a">TCP</text>
+<path d="M 260 554 L 318 554" fill="none" stroke="#57606a" stroke-width="1.8" marker-end="url(#arrow-tcp)"/>
+<rect x="272" y="544" width="36" height="18" rx="4" fill="#ffffff"/>
+<text x="290" y="554" font-size="11" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#57606a">TCP</text>
+<path d="M 490 264 L 540 264 L 540 198 L 598 198" fill="none" stroke="#0969da" stroke-width="1.8" marker-end="url(#arrow-recv)"/>
+<path d="M 490 554 L 940 554 L 940 198 L 782 198" fill="none" stroke="#0969da" stroke-width="1.8" marker-end="url(#arrow-recv)"/>
+<path d="M 690 226 L 690 294" fill="none" stroke="#1a7f37" stroke-width="1.8" marker-end="url(#arrow-loop)"/>
+<path d="M 600 334 L 492 334" fill="none" stroke="#bf8700" stroke-width="1.8" marker-end="url(#arrow-send)"/>
+<path d="M 600 356 L 560 356 L 560 484 L 492 484" fill="none" stroke="#bf8700" stroke-width="1.8" marker-end="url(#arrow-send)"/>
+</svg>

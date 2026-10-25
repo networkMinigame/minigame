@@ -38,9 +38,9 @@ reviews:
   path_instructions:
     - path: "src/main/java/**"
       instructions: |
-        Java 25 + Swing(FlatLaf) + TCP 소켓으로 만드는 2~4인 실시간 미니게임입니다. docs/architecture.md의 구조를 기준으로 리뷰해주세요.
+        Java 25 + Swing(FlatLaf) + TCP 소켓으로 만드는 2~4인 실시간 미니게임입니다. docs/architecture.md와 docs/thread-diagram(현재 버전)을 기준으로 리뷰해주세요.
         1. 동시성: 여러 스레드가 같은 상태를 건드리는 곳을 찾아주세요. 원자적이지 않은 check-then-act, 갱신 손실, volatile 누락으로 인한 가시성 문제, 락 순서가 달라 생기는 데드락, 바쁜 대기(busy-wait)를 확인하고, 깨지는 실행 순서를 예로 들어주세요.
-        2. 서버 구조: 게임 상태는 게임 루프 스레드 하나만 바꿔야 합니다. 수신 스레드는 파싱 후 입력 큐에 넣기만, 송신은 Session의 송신 큐(LinkedBlockingQueue)를 통해서만 해야 합니다. Socket에 직접 쓰는 코드가 있으면 지적해주세요.
+        2. 스레드 구조: 스레드·큐의 이름과 역할, 지켜야 할 규칙은 docs/thread-diagram 현재 버전이 단일 출처입니다. 거기서 정한 스레드가 아닌 곳에서 공유 상태를 바꾸거나 소켓에 직접 쓰는 코드, 문서에 없는 스레드·큐 이름을 쓰는 코드를 지적해주세요.
         3. 판정은 서버에서만 합니다. 클라이언트가 결과를 정하거나, 전원 공개 전에 다른 플레이어의 선택을 broadcast하는 코드가 있으면 지적해주세요.
         4. Swing: 네트워크 스레드에서 UI를 직접 바꾸면 안 되고 SwingUtilities.invokeLater로 EDT에 넘겨야 합니다. EDT에서 소켓 I/O나 긴 작업을 하는지도 봐주세요.
         5. 연결 관리: 접속 종료·예외 시 소켓과 스레드가 정리되는지, InterruptedException을 삼키지 않는지, setTcpNoDelay와 heartbeat가 빠지지 않았는지 확인해주세요.
@@ -53,7 +53,7 @@ reviews:
         2. 테스트 이름만 보고 무엇을 검증하는지 알 수 있는지 확인해주세요.
     - path: "docs/**"
       instructions: |
-        1. 코드나 다른 문서와 내용이 어긋나는 곳을 찾아주세요 (예: architecture.md와 minigames.md의 스레드 구조).
+        1. 코드나 다른 문서와 내용이 어긋나는 곳을 찾아주세요 (예: architecture.md·minigames.md와 thread-diagram의 스레드 구조·이름).
         2. 같은 사실을 두 문서에 적었으면 한쪽을 단일 출처로 두고 링크로 넘기라고 제안해주세요.
         3. 파일 목록·디렉토리 구조처럼 코드에서 바로 알 수 있는 내용은 빼라고 제안해주세요.
 
@@ -83,6 +83,7 @@ knowledge_base:
     enabled: true
     filePatterns:
       - docs/architecture.md
+      - docs/thread-diagram/**/*.md
   learnings:
     scope: local
   issues:

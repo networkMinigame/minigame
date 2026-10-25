@@ -33,22 +33,22 @@
 ### 유지할 것
 
 - **`\n`으로 끝나는 한 줄 = 메시지 하나** (줄 단위 메시지)
-- **소켓마다 송신 큐 + 송신 스레드**: 여러 스레드가 한 소켓에 동시에 쓰면 메시지가 섞임. 느린 클라이언트 한 명 때문에 broadcast 전체가 막히는 것도 방지
-- **클라이언트 수신 → `SwingUtilities.invokeLater`로 EDT에 넘기기**
+- **소켓마다 outbox + Writer 스레드**: 여러 스레드가 한 소켓에 동시에 쓰면 메시지가 섞임. 느린 클라이언트 한 명 때문에 broadcast 전체가 막히는 것도 방지
+- **클라이언트 Reader → `SwingUtilities.invokeLater`로 EDT에 넘기기**
 - FlatLaf, record로 메시지 정의
 
 ### 바꿀 것 (중요한 순서)
 
-1. **게임 루프 스레드 하나가 게임 상태를 전부 맡는다** (가장 중요)
+1. **GameLoop 스레드 하나가 게임 상태를 전부 맡는다** (가장 중요)
    - 초안: 클라이언트별 스레드가 디스패처를 거쳐 게임 로직을 직접 실행 → 4개 스레드가 HP/위치를 동시에 건드려 락 문제 발생
-   - 변경: **수신 스레드는 파싱해서 공용 입력 큐에 넣기만**, **게임 루프 스레드 1개**가 20~30Hz로 큐 비우기 → 상태 갱신 → broadcast
+   - 변경: **Reader는 파싱해서 inbox에 넣기만**, **GameLoop 1개**가 20~30Hz로 inbox 비우기 → 상태 갱신 → broadcast
    - 게임 상태를 한 스레드만 만지므로 synchronized가 거의 필요 없음 (핀닝 고민도 사실상 무관)
 2. **`ConcurrentLinkedQueue` → `LinkedBlockingQueue`**
-   - `ConcurrentLinkedQueue`는 비었을 때 기다리는 기능이 없어 송신 스레드가 바쁜 대기로 CPU를 잡아먹음
+   - `ConcurrentLinkedQueue`는 비었을 때 기다리는 기능이 없어 Writer가 바쁜 대기로 CPU를 잡아먹음
    - `LinkedBlockingQueue.take()`는 메시지가 올 때까지 잠듦
 3. **핸들러에 `Socket`을 직접 넘기지 않는다**
-   - `handle(GameRequest, Socket)`이면 송신 큐를 우회해서 직접 쓸 수 있음
-   - `Session`(playerId + 송신 큐)을 넘기고, 보낼 때는 무조건 `session.send(...)`
+   - `handle(GameRequest, Socket)`이면 outbox를 우회해서 직접 쓸 수 있음
+   - `Session`(playerId + outbox)을 넘기고, 보낼 때는 무조건 `session.send(...)`
 4. **리플렉션 서블릿(@GameServlet) 대신 sealed interface + record + switch**
    - 표준 자바에는 어노테이션 붙은 클래스 자동 스캔 기능이 없음 (라이브러리 또는 수동 등록 필요)
    - 메시지 종류가 20개 미만이라 과함. sealed + switch는 빠진 case를 컴파일러가 잡아줌
@@ -83,28 +83,14 @@ switch (msg) {
 
 ---
 
-## 2. 수정 구조 기준안
+## 2. 스레드 구조
 
-```
-[클라이언트]
-  키 입력 ──> 송신 큐 ──> 송신 스레드 ──────────────> TCP
-  수신 스레드 ──> invokeLater ──> 최신 상태 저장
-  Swing Timer(60fps) ──> repaint (최신 상태 그리기)
+스레드 이름과 배치·역할은 [스레드 구조도](thread-diagram/)가 단일 출처. 여기는 아직 그림에 없는 나중 단계만 적는다.
 
-[서버]
-  Accept 스레드 ──> 접속마다 Session(playerId, 송신 큐) 생성
-  수신 스레드 xN ──> 파싱 ──> 공용 입력 큐
-                                  │
-  게임 루프 스레드 x1 (20~30Hz) <──┘
-    1. 입력 큐 비우기
-    2. 현재 단계 처리 (LOBBY / ITEM / INTRO / MINIGAME / RESULT / FINAL)
-    3. MINIGAME이면 현재미니게임.tick()
-    4. 상태 broadcast ──> 각 Session 송신 큐
-  송신 스레드 xN <── 각자 송신 큐 (LinkedBlockingQueue)
-```
+- **GameLoop 한 tick**: inbox 비우기 → 현재 단계 처리 (LOBBY / ITEM / INTRO / MINIGAME / RESULT / FINAL) → MINIGAME이면 `현재미니게임.tick()` → 상태를 각 outbox에 broadcast
+- **GUI 클라이언트 (M0 이후)**: Reader → `invokeLater` → 최신 상태 저장, `Swing Timer`(60fps) → repaint
 
-스레드 역할이 **받기 / 게임 진행 / 보내기**로 나뉘고, 게임 로직은 루프 스레드 하나에서만 돈다.
-수업 12장 구조(Accept 스레드 + 클라이언트별 스레드)에 게임 루프 스레드 하나를 더 얹은 형태.
+수업 12장 구조(접속 받는 스레드 + 클라이언트별 스레드)에 GameLoop 하나를 더 얹은 형태.
 
 ---
 
