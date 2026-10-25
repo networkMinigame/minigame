@@ -7,6 +7,9 @@ build/
 *.iml
 out/
 
+# Python (docs/thread-diagram 스크립트)
+__pycache__/
+
 # OS
 .DS_Store
 Thumbs.db
