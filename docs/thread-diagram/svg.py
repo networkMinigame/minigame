@@ -2,7 +2,7 @@
 
 색 규칙
 - 박스: 파랑 = 스레드, 노랑 = 큐(또는 큐를 가진 스레드), 초록 = GameLoop, 회색 = 프로세스
-- 선: 회색 = TCP, 파랑 = 받는 길(Reader -> inbox), 초록 = 큐 -> GameLoop, 노랑 = 보내는 길(GameLoop -> outbox -> Writer)
+- 선: 회색 = TCP, 파랑 = 받는 길(Reader -> receiveQueue), 초록 = 큐 -> GameLoop, 노랑 = 보내는 길(GameLoop -> sendQueue -> Writer)
 """
 
 from pathlib import Path

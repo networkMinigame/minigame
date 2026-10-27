@@ -3,7 +3,7 @@
 > [전체도](README.md)의 TCP 화살표와 서버 안 스레드를 시간 순서로 펼친 것.
 
 - 실선 = TCP (네트워크), 점선 = 서버 안 큐 (스레드끼리 전달), 끝이 ✕ = 끊긴 연결
-- `Writer A / B`는 세션마다 있는 Writer 스레드(와 그 outbox)를 한 칸으로 합친 것
+- `Writer A / B`는 세션마다 있는 Writer 스레드(와 그 sendQueue)를 한 칸으로 합친 것
 
 ## 입장 · 채팅 · 핑
 
@@ -18,23 +18,23 @@ sequenceDiagram
     participant B as Client B (id=0)
 
     A->>RA: JOIN name=Kim
-    RA-->>GL: inbox (A, JOIN)
+    RA-->>GL: receiveQueue (A, JOIN)
     Note over GL: id=1 부여, 세션 목록에 추가
-    GL-->>SQ: A outbox에 WELCOME, B outbox에 JOINED
+    GL-->>SQ: A sendQueue에 WELCOME, B sendQueue에 JOINED
     SQ->>A: WELCOME id=1, players
     SQ->>B: JOINED id=1 Kim
 
     A->>RA: CHAT "hi"
-    RA-->>GL: inbox (from=1, CHAT)
-    GL-->>SQ: 모든 outbox에 CHAT from=1
+    RA-->>GL: receiveQueue (from=1, CHAT)
+    GL-->>SQ: 모든 sendQueue에 CHAT from=1
     SQ->>A: CHAT from=1 "hi"
     SQ->>B: CHAT from=1 "hi"
 
     loop 3초마다
-        GL-->>SQ: A outbox에 PING t
+        GL-->>SQ: A sendQueue에 PING t
         SQ->>A: PING t
         A->>RA: PONG t
-        RA-->>GL: inbox (from=1, PONG)
+        RA-->>GL: receiveQueue (from=1, PONG)
         Note over GL: rtt = now - t, 마지막 PONG 시각 기록
     end
 ```
@@ -59,18 +59,18 @@ sequenceDiagram
     alt 정상 종료 (창 닫기, Ctrl+C)
         A-xRA: 연결 닫힘
         Note over RA: readLine() = null
-        RA-->>GL: inbox LEAVE 1
+        RA-->>GL: receiveQueue LEAVE 1
         Note over GL: 세션 목록에서 1 제거
-        GL-->>SQ: B outbox에 LEFT, A outbox에 종료 신호
+        GL-->>SQ: B sendQueue에 LEFT, A sendQueue에 종료 신호
         SQ->>B: LEFT id=1
         Note over SQ: Writer A 종료, 소켓 닫음
     else 응답 없음 (절전, 네트워크 끊김)
         SQ-xA: PING t (PONG 안 옴)
         Note over GL: 10초 동안 PONG 없음 → 1 제거, 소켓 닫음
-        GL-->>SQ: B outbox에 LEFT
+        GL-->>SQ: B sendQueue에 LEFT
         SQ->>B: LEFT id=1
         Note over RA: 소켓이 닫혀 예외로 깨어남
-        RA-->>GL: inbox LEAVE 1
+        RA-->>GL: receiveQueue LEAVE 1
         Note over GL: 이미 목록에 없음 → 무시
     end
 ```
@@ -91,7 +91,7 @@ sequenceDiagram
 | | `LEFT` | id |
 | | `CHAT` | from, text |
 | | `PING` | t |
-| 서버 내부 (`inbox`만) | `LEAVE` | id. 네트워크로 오가지 않음 |
+| 서버 내부 (`receiveQueue`만) | `LEAVE` | id. 네트워크로 오가지 않음 |
 
 ## 정한 숫자 (기준안)
 
