@@ -46,8 +46,8 @@ d.text(525, 288, "둘 다 끝나면 SessionHandler가 close() 호출", size=12, 
 d.line(340, 96, 340, 472)  # 테두리를 박스 위로 다시 그어 "걸친" 모양을 만든다
 
 # 서버 쪽 객체와 스레드
-d.node(800, 150, 165, 76, "title", ["SessionManager", "sessions 목록", "add · remove · closeAll"])
-d.node(800, 330, 165, 56, "thread", ["main", "콘솔 Scanner"])
+d.node(800, 150, 165, 76, "title", ["SessionManager", "sessions 목록", "broadcast · closeAll"])
+d.node(800, 330, 165, 56, "thread", ["console", "콘솔 Scanner"])
 
 # TCP
 d.arrow([(220, 218), (288, 218)], "tcp", "TCP", (254, 218))

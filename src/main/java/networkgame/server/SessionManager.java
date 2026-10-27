@@ -32,16 +32,21 @@ public class SessionManager {
         sessions.remove(session);
     }
 
-    // 복사본을 돈다. session.close()가 remove()로 자기를 빼기 때문에 원본을 돌면 ConcurrentModificationException이 난다.
-    public void closeAll() {
-        List<Session> snapshot;
-        synchronized (this) {
-            snapshot = new ArrayList<>(sessions);
+    public void broadcast(String message) {
+        for (Session session : snapshot()) {
+            session.send(message);
         }
+    }
 
-        for (Session session : snapshot) {
+    public void closeAll() {
+        for (Session session : snapshot()) {
             session.close();
         }
+    }
+
+    // 목록을 돌 때는 복사본을 쓴다. 도는 중에 다른 스레드가 add·remove하거나 session.close()가 remove()를 부르면 ConcurrentModificationException이 난다.
+    private synchronized List<Session> snapshot() {
+        return new ArrayList<>(sessions);
     }
 
     // 전체 조회
