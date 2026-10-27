@@ -14,7 +14,7 @@ d = Diagram(1000, 660)
 
 # 제목
 d.node(60, 24, 160, 40, "title", ["Client A"])
-d.node(560, 24, 300, 40, "title", ["Server  100.x.x.x:5000"])
+d.node(560, 24, 300, 40, "title", ["Server  100.x.x.x:12345"])
 
 # 클라이언트 A
 d.rect(20, 84, 240, 300, "process", r=12)

@@ -4,7 +4,7 @@
 <rect x="60" y="24" width="160" height="40" rx="8" fill="#ffffff" stroke="#57606a" stroke-width="1.6"/>
 <text x="140.0" y="44.0" font-size="15" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">Client A</text>
 <rect x="560" y="24" width="300" height="40" rx="8" fill="#ffffff" stroke="#57606a" stroke-width="1.6"/>
-<text x="710.0" y="44.0" font-size="15" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">Server  100.x.x.x:5000</text>
+<text x="710.0" y="44.0" font-size="15" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">Server  100.x.x.x:12345</text>
 <rect x="20" y="84" width="240" height="300" rx="12" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.6"/>
 <rect x="50" y="104" width="180" height="44" rx="8" fill="#ffffff" stroke="#0969da" stroke-width="1.6"/>
 <text x="140.0" y="126.0" font-size="15" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">Input</text>
