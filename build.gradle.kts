@@ -24,6 +24,12 @@ tasks.test {
     useJUnitPlatform()
 }
 
+// IntelliJ가 Gradle로 main()을 실행할 때도 이 설정을 탄다. Windows 한국어 기본(코드 페이지 949)에서는
+// 콘솔 출력이 MS949로 나가고 IntelliJ는 UTF-8로 읽어서 한글이 깨지므로, 어느 PC에서든 UTF-8로 고정한다.
+tasks.withType<JavaExec>().configureEach {
+    jvmArgs("-Dstdout.encoding=UTF-8", "-Dstderr.encoding=UTF-8")
+}
+
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(25)
