@@ -24,6 +24,7 @@ public class ReadHandler extends SessionHandler {
                 continue;
             }
             log(inputMessage);
+            session.relay(inputMessage);
         }
 
         log("클라이언트가 연결을 닫음");
