@@ -19,13 +19,13 @@ public class ReadHandler extends SessionHandler {
         BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream(), UTF_8));
 
         String inputMessage;
-
-        inputMessage = in.readLine();
-
-        if(inputMessage == null || inputMessage.isEmpty()) {
-            return;
+        while ((inputMessage = in.readLine()) != null) {
+            if (inputMessage.isBlank()) {
+                continue;
+            }
+            log(inputMessage);
         }
 
-        log(inputMessage);
+        log("클라이언트가 연결을 닫음");
     }
 }
