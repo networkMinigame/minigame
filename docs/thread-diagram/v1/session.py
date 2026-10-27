@@ -53,9 +53,9 @@ d.node(800, 330, 165, 56, "thread", ["console", "콘솔 Scanner"])
 d.arrow([(220, 218), (288, 218)], "tcp", "TCP", (254, 218))
 d.arrow([(290, 358), (222, 358)], "tcp", "TCP", (256, 358))
 
-# 받는 길: Reader -> 로그
+# 받는 길: Reader -> 로그, relay()로 모두에게
 d.arrow([(490, 218), (560, 218)], "recv")
-d.text(615, 218, "log() 출력", size=13, weight=400, color="#57606a")
+d.text(625, 218, "log() · relay()", size=13, weight=400, color="#57606a")
 
 # 보내는 길: main -> sendQueue -> Writer
 d.arrow([(800, 358), (692, 358)], "send")

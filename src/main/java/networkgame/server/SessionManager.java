@@ -32,21 +32,23 @@ public class SessionManager {
         sessions.remove(session);
     }
 
-    public void broadcast(String message) {
-        for (Session session : snapshot()) {
+    // 잠금 안에서 모두에게 넣는다. 잠금 밖에서 넣으면 두 사람이 동시에 보낼 때 받는 사람마다 순서가 달라질 수 있다.
+    public synchronized void broadcast(String message) {
+        for (Session session : sessions) {
             session.send(message);
         }
     }
 
+    // 복사본을 돈다. session.close()가 remove()로 자기를 빼기 때문에 원본을 돌면 ConcurrentModificationException이 난다.
     public void closeAll() {
-        for (Session session : snapshot()) {
+        List<Session> snapshot;
+        synchronized (this) {
+            snapshot = new ArrayList<>(sessions);
+        }
+
+        for (Session session : snapshot) {
             session.close();
         }
-    }
-
-    // 목록을 돌 때는 복사본을 쓴다. 도는 중에 다른 스레드가 add·remove하거나 session.close()가 remove()를 부르면 ConcurrentModificationException이 난다.
-    private synchronized List<Session> snapshot() {
-        return new ArrayList<>(sessions);
     }
 
     // 전체 조회

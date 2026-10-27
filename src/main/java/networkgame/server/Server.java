@@ -29,7 +29,7 @@ public class Server {
         while (true) {
             Socket socket = listener.accept();
             log("접속 " + socket.getRemoteSocketAddress());
-            new Session(socket, sessionManager, "guest");
+            new Session(socket, sessionManager, "guest-" + socket.getPort());
         }
     }
 

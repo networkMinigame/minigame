@@ -9,6 +9,7 @@
 - 박스: 파랑 = 스레드, 노랑 = 큐, 흰 박스 = 객체 (스레드 아님. 점선 테두리 Session은 Reader·Writer·sendQueue를 가진 객체)
 - 선: 회색 실선 = TCP, 회색 점선 = 메서드 호출, 파랑 = 받는 길, 노랑 = 보내는 길
 - 지금은 GameLoop가 없어서 `console` 스레드가 콘솔에서 읽은 줄을 `broadcast()`로 모든 세션의 sendQueue에 넣는다. `main`은 `accept()`만 반복한다
+- Reader가 받은 줄은 `relay()`가 `이름: 내용`으로 만들어 `broadcast()`한다. 보낸 사람도 돌려받는다. `broadcast()`는 잠금 안에서 모두에게 넣어서, 동시에 보내도 모두가 같은 순서로 받는다
 
 ## 닫기
 

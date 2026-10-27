@@ -37,6 +37,11 @@ public class Session {
         sendQueue.add(message);
     }
 
+    // 받은 줄에 보낸 사람 이름을 붙여 모두에게 보낸다. 보낸 사람도 돌려받아야 모두가 같은 순서로 본다.
+    void relay(String message) {
+        sessionManager.broadcast(name + ": " + message);
+    }
+
     // Reader, Writer, closeAll()이 동시에 부를 수 있다. if (closed) 검사 후 대입하면 둘이 함께 통과하므로 CAS로 한 번만 통과시킨다.
     public void close() {
         if (!closed.compareAndSet(false, true)) {
