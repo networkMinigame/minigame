@@ -24,13 +24,24 @@ public class Server {
         listener = new ServerSocket(port);
         log("서버 소켓 요청 대기");
 
-        Socket socket = listener.accept();
-        Session session = new Session(socket, sessionManager, "guest");
+        new Thread(this::readConsole, "console").start();
 
-        // 콘솔은 여기서만 읽는다. 세션마다 Scanner를 만들면 여러 Scanner가 콘솔 줄을 나눠 가져간다.
+        while (true) {
+            Socket socket = listener.accept();
+            log("접속 " + socket.getRemoteSocketAddress());
+            new Session(socket, sessionManager, "guest");
+        }
+    }
+
+    // 콘솔은 여기서만 읽는다. 세션마다 Scanner를 만들면 여러 Scanner가 콘솔 줄을 나눠 가져간다.
+    private void readConsole() {
         Scanner scanner = new Scanner(System.in);
         while (scanner.hasNextLine()) {
-            session.send(scanner.nextLine());
+            String line = scanner.nextLine();
+            if (line.isBlank()) {
+                continue;
+            }
+            sessionManager.broadcast(line);
         }
     }
 }
