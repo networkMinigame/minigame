@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 510" width="1000" height="510" font-family="Pretendard, 'Malgun Gothic', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif">
+<rect width="1000" height="510" rx="12" fill="#ffffff"/>
+<defs><marker id="arrow-tcp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#57606a"/></marker><marker id="arrow-recv" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#0969da"/></marker><marker id="arrow-loop" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#1a7f37"/></marker><marker id="arrow-send" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#bf8700"/></marker></defs>
+<rect x="40" y="24" width="160" height="40" rx="8" fill="#ffffff" stroke="#57606a" stroke-width="1.6"/>
+<text x="120.0" y="44.0" font-size="15" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">Client</text>
+<rect x="560" y="24" width="300" height="40" rx="8" fill="#ffffff" stroke="#57606a" stroke-width="1.6"/>
+<text x="710.0" y="44.0" font-size="15" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">Server  :12345</text>
+<rect x="20" y="84" width="200" height="400" rx="12" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.6"/>
+<text x="120" y="272" font-size="15" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">Client</text>
+<text x="120" y="294" font-size="13" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">(전체도의 Client A)</text>
+<rect x="340" y="84" width="640" height="400" rx="12" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.6"/>
+<rect x="270" y="110" width="440" height="340" rx="10" fill="#ffffff" stroke="#57606a" stroke-width="1.4" stroke-dasharray="6 4"/>
+<text x="525" y="134" font-size="15" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">Session</text>
+<text x="525" y="156" font-size="12" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">close()는 CAS로 한 번만 실행</text>
+<rect x="290" y="190" width="200" height="56" rx="8" fill="#ffffff" stroke="#0969da" stroke-width="1.6"/>
+<text x="390.0" y="208.0" font-size="15" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">Reader</text>
+<text x="390.0" y="228.0" font-size="13" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">ReadHandler · readLine()</text>
+<rect x="290" y="330" width="200" height="56" rx="8" fill="#ffffff" stroke="#0969da" stroke-width="1.6"/>
+<text x="390.0" y="348.0" font-size="15" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">Writer</text>
+<text x="390.0" y="368.0" font-size="13" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">WriteHandler · write()</text>
+<rect x="530" y="330" width="160" height="56" rx="8" fill="#fff8c5" stroke="#bf8700" stroke-width="1.6"/>
+<text x="610.0" y="348.0" font-size="15" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">sendQueue</text>
+<text x="610.0" y="368.0" font-size="13" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">take()로 꺼냄</text>
+<text x="525" y="288" font-size="12" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">둘 다 끝나면 SessionHandler가 close() 호출</text>
+<line x1="340" y1="96" x2="340" y2="472" stroke="#8c959f" stroke-width="1.6"/>
+<rect x="800" y="150" width="165" height="76" rx="8" fill="#ffffff" stroke="#57606a" stroke-width="1.6"/>
+<text x="882.5" y="168.0" font-size="15" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">SessionManager</text>
+<text x="882.5" y="188.0" font-size="13" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">sessions 목록</text>
+<text x="882.5" y="208.0" font-size="13" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">add · remove · closeAll</text>
+<rect x="800" y="330" width="165" height="56" rx="8" fill="#ffffff" stroke="#0969da" stroke-width="1.6"/>
+<text x="882.5" y="348.0" font-size="15" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">main</text>
+<text x="882.5" y="368.0" font-size="13" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">콘솔 Scanner</text>
+<path d="M 220 218 L 288 218" fill="none" stroke="#57606a" stroke-width="1.8" marker-end="url(#arrow-tcp)"/>
+<rect x="236" y="208" width="36" height="18" rx="4" fill="#ffffff"/>
+<text x="254" y="218" font-size="11" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#57606a">TCP</text>
+<path d="M 290 358 L 222 358" fill="none" stroke="#57606a" stroke-width="1.8" marker-end="url(#arrow-tcp)"/>
+<rect x="238" y="348" width="36" height="18" rx="4" fill="#ffffff"/>
+<text x="256" y="358" font-size="11" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#57606a">TCP</text>
+<path d="M 490 218 L 560 218" fill="none" stroke="#0969da" stroke-width="1.8" marker-end="url(#arrow-recv)"/>
+<text x="615" y="218" font-size="13" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">log() 출력</text>
+<path d="M 800 358 L 692 358" fill="none" stroke="#bf8700" stroke-width="1.8" marker-end="url(#arrow-send)"/>
+<text x="746" y="344" font-size="11" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#57606a">send()</text>
+<path d="M 530 358 L 492 358" fill="none" stroke="#bf8700" stroke-width="1.8" marker-end="url(#arrow-send)"/>
+<path d="M 710 176 L 798 176" fill="none" stroke="#57606a" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#arrow-tcp)"/>
+<text x="755" y="164" font-size="11" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#57606a">add · remove</text>
+<path d="M 800 206 L 712 206" fill="none" stroke="#57606a" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#arrow-tcp)"/>
+<text x="755" y="222" font-size="11" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#57606a">close()</text>
+</svg>
