@@ -28,4 +28,4 @@ JDK를 따로 맞출 필요는 없습니다. JDK 25가 없으면 첫 빌드 때 
 - [스레드 구조도](docs/thread-diagram/): 서버·클라이언트 스레드와 큐 그림, 메시지가 지나가는 순서 (버전별)
 - [미니게임 목록](docs/minigames.md): 메인/후보 게임, 형식(개인전·2:2·1:나머지), 동시성 포인트
 - [라이브러리 사용법](docs/libraries.md): FlatLaf, MigLayout, Gson/Jackson 등을 기본 Swing·자바 코드와 비교
-- [개발 컨벤션](CONVENTION.md): 작업 흐름, Java 주석, 테스트 및 Git 규칙
+- [개발 컨벤션](CONTRIBUTING.md): 작업 흐름, Java 주석, 테스트 및 Git 규칙
