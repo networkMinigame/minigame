@@ -103,40 +103,9 @@ panel.add(addressField);
 panel.add(joinButton, "span 2, align center");   // 두 칸 합쳐서 가운데
 ```
 
-## 5. Gson / Jackson: 메시지 직렬화
+## 5. Jackson: 메시지 직렬화
 
-메시지 형식(JSON vs 문자열)은 아직 정하지 않음 ([architecture.md](architecture.md) 열린 질문). 아래는 고를 때 비교용. **둘 중 하나로 정하면 나머지는 의존성에서 뺀다.**
-
-공통 주의: 한 줄 = 메시지 하나이므로 **pretty print(줄바꿈 넣는 출력)를 켜지 않는다.** 둘 다 기본값은 한 줄 출력.
-
-**기존 (문자열 프로토콜)**
-
-```java
-String line = "MOVE|1|0";
-String[] parts = line.split("\\|");
-ClientMsg msg = switch (parts[0]) {
-    case "MOVE" -> new Move(Integer.parseInt(parts[1]), Integer.parseInt(parts[2]));
-    // 필드가 늘거나 순서가 바뀌면 보내는 쪽·받는 쪽 인덱스를 같이 고쳐야 함
-    default -> throw new IllegalArgumentException("알 수 없는 메시지: " + parts[0]);
-};
-```
-
-**Gson**: sealed interface를 자동으로 구분하지 못해서 `type` + `data` 봉투로 감싼다
-
-```java
-record Envelope(String type, JsonElement data) {}
-
-Gson gson = new Gson();
-String line = gson.toJson(new Envelope("MOVE", gson.toJsonTree(new Move(1, 0))));
-// {"type":"MOVE","data":{"dx":1,"dy":0}}
-
-Envelope env = gson.fromJson(line, Envelope.class);
-ClientMsg msg = switch (env.type()) {
-    case "MOVE" -> gson.fromJson(env.data(), Move.class);
-    case "USE_ITEM" -> gson.fromJson(env.data(), UseItem.class);
-    default -> throw new IllegalArgumentException("알 수 없는 메시지: " + env.type());
-};
-```
+JSON 직렬화에는 Jackson을 사용한다. 메시지 프로토콜은 [설계 기준안](architecture.md)에서 결정한다. 한 줄이 메시지 하나이므로 JSON 출력에 줄바꿈을 넣지 않는다.
 
 **Jackson**: 인터페이스에 어노테이션을 달면 `type` 필드로 알아서 구분
 
@@ -161,12 +130,6 @@ switch (msg) {
 
 - Jackson 3은 패키지가 `tools.jackson.*`. 검색해서 나오는 예제 대부분은 Jackson 2(`com.fasterxml.jackson.databind.*`)라 import가 다름. 어노테이션만 `com.fasterxml.jackson.annotation.*` 그대로
 - Jackson 3은 예외가 unchecked(`JacksonException`)라 `throws`를 안 붙여도 됨
-
-| | Gson | Jackson |
-|---|---|---|
-| 메시지 종류 구분 | 봉투 + switch를 직접 작성 | 어노테이션만 달면 자동 |
-| 새 메시지 추가 시 | switch에 case 추가 | `@JsonSubTypes`에 한 줄 추가 |
-| 크기·설정 | 작고 단순 | 기능이 많음 |
 
 ## 6. JUnit + AssertJ: 테스트
 
