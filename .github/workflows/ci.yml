@@ -1,0 +1,33 @@
+name: CI
+
+# PR과 main 반영 때 테스트를 돌린다. 테스트가 창을 띄우지 않아 화면 없는 Ubuntu에서 돌린다.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '25'
+
+      - uses: gradle/actions/setup-gradle@v6
+
+      - name: 테스트하고 빌드
+        run: ./gradlew build
+
+      - name: 실패한 테스트 보고서 첨부
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-report
+          path: build/reports/tests/test
