@@ -1,0 +1,82 @@
+name: 배포
+
+# v0.1.0처럼 숫자 세 자리 태그를 push하면 Windows용 exe를 묶어 GitHub Releases에 올린다.
+# Actions 탭에서 직접 실행하면 Releases 대신 실행 기록에 결과물을 첨부한다.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  windows-exe:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '25'
+
+      - uses: gradle/actions/setup-gradle@v6
+
+      - name: 테스트하고 jar 만들기
+        run: .\gradlew.bat build installDist
+
+      # jpackage는 숫자로 된 버전만 받으므로 태그 앞의 v를 뗀다. 태그 없이 직접 실행하면 0.0.0으로 둔다.
+      - name: 버전 정하기
+        id: version
+        run: |
+          $version = if ($env:GITHUB_REF_TYPE -eq 'tag') { $env:GITHUB_REF_NAME.TrimStart('v') } else { '0.0.0' }
+          "version=$version" >> $env:GITHUB_OUTPUT
+
+      # exe에 넣을 Java 모듈만 골라 용량을 줄인다.
+      # jdeps는 리플렉션으로 불러오는 모듈을 찾지 못해 sun.misc.Unsafe가 든 jdk.unsupported와 java.logging을 직접 더한다.
+      - name: 필요한 Java 모듈 찾기
+        id: modules
+        run: |
+          $PSNativeCommandUseErrorActionPreference = $true
+          $jars = (Get-ChildItem 'build/install/networkGame/lib/*.jar').FullName
+          $modules = & "$env:JAVA_HOME/bin/jdeps" --multi-release 25 --ignore-missing-deps --print-module-deps $jars
+          "modules=$modules,java.logging,jdk.unsupported" >> $env:GITHUB_OUTPUT
+
+      # 친구들에게 나눠 줄 클라이언트를 묶는다. 서버는 EC2에서 돌고 cd.yml이 배포한다.
+      # 지금 클라이언트는 키보드 입력을 받는 콘솔 프로그램이라 --win-console로 콘솔 창을 띄운다. Swing 화면으로 바뀌면 뺀다.
+      - name: 실행 파일 묶기
+        env:
+          APP_VERSION: ${{ steps.version.outputs.version }}
+          APP_MODULES: ${{ steps.modules.outputs.modules }}
+        run: |
+          $PSNativeCommandUseErrorActionPreference = $true
+          & "$env:JAVA_HOME/bin/jpackage" --type app-image --name networkGame --app-version $env:APP_VERSION `
+            --input build/install/networkGame/lib --main-jar networkGame.jar --main-class networkgame.client.ClientMain `
+            --win-console `
+            --add-modules $env:APP_MODULES `
+            --jlink-options '--strip-debug --no-man-pages --no-header-files' `
+            --java-options '-Dstdout.encoding=UTF-8 -Dstderr.encoding=UTF-8' `
+            --dest build/jpackage
+
+      - name: zip으로 압축
+        id: package
+        env:
+          APP_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          $zip = "build/networkGame-$env:APP_VERSION-windows.zip"
+          Compress-Archive -Path build/jpackage/networkGame -DestinationPath $zip
+          "zip=$zip" >> $env:GITHUB_OUTPUT
+
+      - name: Releases에 올리기
+        if: github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create $env:GITHUB_REF_NAME ${{ steps.package.outputs.zip }} --generate-notes
+
+      - name: 실행 기록에 첨부
+        if: github.ref_type != 'tag'
+        uses: actions/upload-artifact@v7
+        with:
+          name: networkGame-windows
+          path: build/jpackage
