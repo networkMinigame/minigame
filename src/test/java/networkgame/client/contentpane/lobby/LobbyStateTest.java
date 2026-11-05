@@ -9,15 +9,14 @@ import networkgame.client.contentpane.lobby.LobbyState.Direction;
 import networkgame.client.contentpane.lobby.LobbyState.Player;
 
 class LobbyStateTest {
-    private final LobbyState state = new LobbyState();
-    private final Player player = new Player(7, "모카", 0, 100, 200, Direction.DOWN, false);
-
     @Test
     @DisplayName("같은 캐릭터를 고른 플레이어도 서로 다른 ID로 로비에 표시된다")
     void addsPlayersById() {
         // given
-        state.put(player);
+        LobbyState state = new LobbyState();
+        Player player = new Player(7, "모카", 0, 100, 200, Direction.DOWN, false);
         Player guest = new Player(8, "구름", 0, 200, 300, Direction.LEFT, false);
+        state.put(player);
 
         // when
         state.put(guest);
@@ -30,6 +29,8 @@ class LobbyStateTest {
     @DisplayName("플레이어가 나가면 로비 목록에서 사라진다")
     void removesPlayer() {
         // given
+        LobbyState state = new LobbyState();
+        Player player = new Player(7, "모카", 0, 100, 200, Direction.DOWN, false);
         state.put(player);
 
         // when
@@ -43,6 +44,8 @@ class LobbyStateTest {
     @DisplayName("플레이어가 움직이면 위치와 방향이 바뀐다")
     void movesPlayer() {
         // given
+        LobbyState state = new LobbyState();
+        Player player = new Player(7, "모카", 0, 100, 200, Direction.DOWN, false);
         state.put(player);
 
         // when
