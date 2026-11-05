@@ -15,8 +15,8 @@ import javax.swing.JPanel;
 import javax.swing.Timer;
 
 import networkgame.client.KeyCommandInvoker;
-import networkgame.client.contentpane.lobby.LobbyState.Direction;
 import networkgame.client.contentpane.lobby.LobbyState.Player;
+import networkgame.protocol.Direction;
 
 /** Runs the offline lobby and owns its input and frame timer on the EDT. */
 public final class LobbySession {

@@ -5,8 +5,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import networkgame.client.contentpane.lobby.LobbyState.Direction;
 import networkgame.client.contentpane.lobby.LobbyState.Player;
+import networkgame.protocol.Direction;
 
 class LobbyStateTest {
     @Test

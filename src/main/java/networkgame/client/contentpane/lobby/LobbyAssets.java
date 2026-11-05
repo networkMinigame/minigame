@@ -6,7 +6,7 @@ import java.io.InputStream;
 import java.util.Locale;
 import javax.imageio.ImageIO;
 
-import networkgame.client.contentpane.lobby.LobbyState.Direction;
+import networkgame.protocol.Direction;
 
 public final class LobbyAssets {
     private static final int CHARACTER_COUNT = 4;

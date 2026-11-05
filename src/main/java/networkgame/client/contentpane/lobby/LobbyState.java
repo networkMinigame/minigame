@@ -4,10 +4,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import networkgame.protocol.Direction;
+
 /** Swing 이벤트 디스패치 스레드에서 관리하는 로비의 플레이어 상태. */
 final class LobbyState {
-    enum Direction { DOWN, LEFT, RIGHT, UP }
-
     record Player(int playerId, String name, int character, double x, double y,
                   Direction direction, boolean walking) {
     }
