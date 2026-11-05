@@ -38,7 +38,7 @@ Javadoc의 태그는 설명할 내용이 있을 때 사용한다.
 
 ## 테스트
 
-테스트는 **given / when / then**으로 나눈다. 각각 준비, 실행, 검증 단계이며 `// given`, `// when`, `// then` 주석으로 구분한다.
+모든 테스트는 **given / when / then** 세 구간으로 나눈다. 각각 준비, 실행, 검증 단계이며 `// given`, `// when`, `// then` 주석으로 구분한다. `// when, then`처럼 두 구간을 합치지 않는다.
 
 | 단계 | 작성할 내용 |
 | --- | --- |
@@ -66,7 +66,9 @@ void rejectsDuplicateCharacters() {
 ```
 
 - 테스트 하나에는 동작 하나를 둔다. 같은 동작의 반환값과 상태를 함께 검증해도 된다.
-- 입력값만 달라지는 같은 검증은 `@ParameterizedTest`로 반복한다. 준비 상태나 기대 동작이 다르면 테스트를 나눈다.
+- 테스트에 쓰는 값은 given에서 직접 만들고 그 테스트 안에서만 쓴다. 여러 테스트가 같이 쓰는 상수나 `@MethodSource`용 목록을 클래스 위에 두지 않는다. 테스트 하나만 읽어도 무엇을 넣어 무엇이 나오는지 보이게 하려는 것이다.
+- 입력값만 다른 검증도 `@ParameterizedTest`로 묶지 않고 테스트를 나눈다. 테스트가 많아지면 `@Nested` 클래스로 묶는다.
+- 예외는 `assertThatThrownBy`로 실행과 검증을 한 줄에 쓰지 않는다. when에서 `Throwable thrown = catchThrowable(() -> ...)`로 받고, then에서 `assertThat(thrown).isInstanceOf(...)`로 검증한다.
 - 게임 로직의 판정, 점수, 탈락은 네트워크 연결 없이 검사한다.
 - 동시성 테스트는 `Thread.sleep`으로 실행 순서를 기대하지 않는다. `CountDownLatch`처럼 다른 스레드의 특정 단계 도달을 기다리는 도구로 순서를 맞춘다.
 - `@DisplayName`에는 테스트 실행 결과에 표시할 이름을 적는다. 구현 용어 대신 어떤 상황에서 어떤 결과가 나오는지 쓴다.
