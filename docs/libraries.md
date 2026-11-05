@@ -105,17 +105,16 @@ panel.add(joinButton, "span 2, align center");   // 두 칸 합쳐서 가운데
 
 ## 5. Jackson: 메시지 직렬화
 
-JSON 직렬화에는 Jackson을 사용한다. 메시지 프로토콜은 [설계 기준안](architecture.md)에서 결정한다. 한 줄이 메시지 하나이므로 JSON 출력에 줄바꿈을 넣지 않는다.
+JSON 직렬화에는 Jackson을 사용한다. 메시지 형식과 목록은 [메시지 목록](thread-diagram/v1/protocol.md#메시지-목록)이 단일 출처. 한 줄이 메시지 하나이므로 JSON 출력에 줄바꿈을 넣지 않는다.
 
 **Jackson**: 인터페이스에 어노테이션을 달면 `type` 필드로 알아서 구분
 
 ```java
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@JsonSubTypes({
-    @JsonSubTypes.Type(value = Move.class, name = "MOVE"),
-    @JsonSubTypes.Type(value = UseItem.class, name = "USE_ITEM")
-})
-sealed interface ClientMsg permits Move, UseItem {}
+sealed interface ClientMsg {
+    @JsonTypeName("MOVE")     record Move(int dx, int dy) implements ClientMsg {}
+    @JsonTypeName("USE_ITEM") record UseItem(String item, int targetId) implements ClientMsg {}
+}
 
 JsonMapper mapper = JsonMapper.builder().build();
 String line = mapper.writeValueAsString(new UseItem("bomb", 2));
@@ -130,6 +129,10 @@ switch (msg) {
 
 - Jackson 3은 패키지가 `tools.jackson.*`. 검색해서 나오는 예제 대부분은 Jackson 2(`com.fasterxml.jackson.databind.*`)라 import가 다름. 어노테이션만 `com.fasterxml.jackson.annotation.*` 그대로
 - Jackson 3은 예외가 unchecked(`JacksonException`)라 `throws`를 안 붙여도 됨
+- `@JsonSubTypes`와 `permits`는 안 써도 됨. Jackson이 sealed 선언에서 하위 record를 찾고, 같은 파일 안의 하위 타입은 자바가 `permits` 생략을 허용함 (3.2.4에서 확인, 2026-11-05)
+- 대신 record마다 `@JsonTypeName`을 붙인다. 빠뜨리면 type이 `ClientMsg$Move` 같은 클래스 이름으로 나감
+- 기본 설정은 빠진 필드를 0·null로 채우고 모르는 필드를 무시함. 이걸 예외로 바꾸는 설정은 `MessageCodec` 참고
+- 한 줄 전체가 `null`이면 `readValue`가 예외 없이 `null`을 돌려줌. 위 설정은 record 필드에만 적용돼서 막지 못하므로 `MessageCodec`에서 직접 검사함
 
 ## 6. JUnit + AssertJ: 테스트
 
