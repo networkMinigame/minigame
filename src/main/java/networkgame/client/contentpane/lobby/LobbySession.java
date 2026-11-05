@@ -37,20 +37,7 @@ public final class LobbySession {
 
     public void show() {
         LobbyPanel lobby = new LobbyPanel(state, assets);
-        JLabel hint = new JLabel("오프라인 로비   ·   방향키로 이동");
-        hint.setOpaque(true);
-        hint.setBackground(LobbyStyle.PAPER);
-        hint.setForeground(LobbyStyle.INK);
-        hint.setBorder(BorderFactory.createEmptyBorder(10, 16, 10, 16));
-        JPanel content = new JPanel(new BorderLayout());
-        content.add(lobby, BorderLayout.CENTER);
-        content.add(hint, BorderLayout.SOUTH);
-        window.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        window.setContentPane(content);
-        window.setResizable(true);
-        window.setMinimumSize(new Dimension(620, 380));
-        window.pack();
-        window.setLocationRelativeTo(null);
+        configureWindow(createContentPane(lobby));
 
         Timer timer = new Timer(16, event -> {
             moveLocalPlayer();
@@ -59,6 +46,32 @@ public final class LobbySession {
         installControls(timer);
         window.setVisible(true);
         timer.start();
+    }
+
+    private JPanel createContentPane(LobbyPanel lobby) {
+        JPanel content = new JPanel(new BorderLayout());
+        content.add(lobby, BorderLayout.CENTER);
+        content.add(createHint(), BorderLayout.SOUTH);
+        return content;
+    }
+
+    private JLabel createHint() {
+        JLabel hint = new JLabel("오프라인 로비   ·   방향키로 이동");
+        hint.setOpaque(true);
+        hint.setBackground(LobbyStyle.PAPER);
+        hint.setForeground(LobbyStyle.INK);
+        hint.setBorder(BorderFactory.createEmptyBorder(10, 16, 10, 16));
+        return hint;
+    }
+
+    // pack()은 내용이 들어간 뒤에, 가운데 놓기는 pack()으로 크기가 정해진 뒤에 해야 해서 이 순서를 지킨다.
+    private void configureWindow(JPanel content) {
+        window.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        window.setContentPane(content);
+        window.setResizable(true);
+        window.setMinimumSize(new Dimension(620, 380));
+        window.pack();
+        window.setLocationRelativeTo(null);
     }
 
     private void installControls(Timer timer) {
