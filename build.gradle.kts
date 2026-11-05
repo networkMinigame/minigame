@@ -36,5 +36,11 @@ java {
 }
 
 application {
-    mainClass = "networkgame.Main"
+    mainClass = "networkgame.client.ClientMain"
+}
+
+tasks.processResources {
+    from("resources") {
+        include("map/lobby.png", "characters/round-cats/**/*_idle_*.png", "characters/round-cats/**/*_run_*.png")
+    }
 }
