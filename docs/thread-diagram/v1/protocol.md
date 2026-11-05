@@ -80,18 +80,32 @@ sequenceDiagram
 
 ## 메시지 목록
 
-| 방향 | 메시지 | 내용 |
+한 줄(`\n`까지)에 JSON 하나. `type`으로 종류를 구분하고, 나머지 필드는 아래 표의 순서대로 나간다. 코드는 `networkgame.protocol`의 `ClientMsg`·`ServerMsg`.
+
+```json
+{"type":"JOIN","name":"Kim","character":2}
+```
+
+| 방향 | 메시지 | 필드 |
 |---|---|---|
-| 클라 → 서버 | `JOIN` | name |
+| 클라 → 서버 | `JOIN` | name, character (고른 고양이 번호) |
 | | `CHAT` | text |
 | | `PONG` | t (받은 PING 값 그대로) |
-| 서버 → 클라 | `WELCOME` | id, players (id·name 목록) |
-| | `REJECT` | reason |
-| | `JOINED` | id, name |
+| | `MOVE` | x, y, direction (로비 위치와 바라보는 방향) |
+| | `READY` | ready |
+| 서버 → 클라 | `WELCOME` | id (받는 사람의 playerId), players (본인 포함 접속자의 id·name·character·x·y·direction) |
+| | `REJECT` | reason (`FULL`, `NAME_TAKEN`) |
+| | `JOINED` | player (`WELCOME`의 players 한 칸과 같은 모양) |
 | | `LEFT` | id |
 | | `CHAT` | from, text |
 | | `PING` | t |
+| | `MOVED` | id, x, y, direction |
+| | `READY_STATE` | readyIds (준비한 playerId 목록) |
+| | `START` | 없음 |
 | 서버 내부 (`receiveQueue`만) | `LEAVE` | id. 네트워크로 오가지 않음 |
+
+- 클라이언트 메시지에는 보낸 사람을 넣지 않는다. 서버 Reader가 받은 소켓으로 붙인다 (`CHAT`의 from도 서버가 채움)
+- 깨진 JSON, 줄 전체가 `null`인 경우, 모르는 `type`, 빠졌거나 null이거나 남는 필드는 변환할 때 예외가 난다. 받는 쪽은 그 줄만 버리고 로그를 남긴다
 
 ## 정한 숫자 (기준안)
 
