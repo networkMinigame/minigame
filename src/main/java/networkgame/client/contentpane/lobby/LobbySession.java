@@ -1,4 +1,4 @@
-package networkgame.client;
+package networkgame.client.contentpane.lobby;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -14,32 +14,28 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.Timer;
 
-import networkgame.client.LobbyState.Direction;
-import networkgame.client.LobbyState.Player;
+import networkgame.client.KeyCommandInvoker;
+import networkgame.client.contentpane.lobby.LobbyState.Direction;
+import networkgame.client.contentpane.lobby.LobbyState.Player;
 
 /** Runs the offline lobby and owns its input and frame timer on the EDT. */
-final class LobbySession {
+public final class LobbySession {
     private static final int LOCAL_PLAYER = 1;
     private static final double MOVE_STEP = 5;
 
-    private final JFrame window;
+    private final JFrame window = new JFrame("미니게임 · 로비");
     private final LobbyAssets assets;
     private final LobbyState state = new LobbyState();
     private final EnumSet<Direction> pressed = EnumSet.noneOf(Direction.class);
 
-    LobbySession(JFrame window, LobbyAssets assets, String name, int character) {
-        this.window = window;
+    public LobbySession(LobbyAssets assets, String name, int character) {
         this.assets = assets;
         double centerX = assets.map.getWidth() / 2.0;
         double centerY = assets.map.getHeight() / 2.0;
         state.put(new Player(LOCAL_PLAYER, name, character, centerX, centerY, Direction.DOWN, false));
-        state.put(new Player(2, "모카", (character + 1) % LobbyAssets.CHARACTER_COUNT,
-                centerX - 165, centerY + 75, Direction.RIGHT, false));
-        state.put(new Player(3, "구름", (character + 2) % LobbyAssets.CHARACTER_COUNT,
-                centerX + 165, centerY + 45, Direction.LEFT, false));
     }
 
-    void show() {
+    public void show() {
         LobbyPanel lobby = new LobbyPanel(state, assets);
         JLabel hint = new JLabel("오프라인 로비   ·   방향키로 이동");
         hint.setOpaque(true);
@@ -49,8 +45,7 @@ final class LobbySession {
         JPanel content = new JPanel(new BorderLayout());
         content.add(lobby, BorderLayout.CENTER);
         content.add(hint, BorderLayout.SOUTH);
-        window.getRootPane().setDefaultButton(null);
-        window.setTitle("미니게임 · 로비");
+        window.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         window.setContentPane(content);
         window.setResizable(true);
         window.setMinimumSize(new Dimension(620, 380));
@@ -62,6 +57,7 @@ final class LobbySession {
             lobby.renderFrame();
         });
         installControls(timer);
+        window.setVisible(true);
         timer.start();
     }
 

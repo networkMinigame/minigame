@@ -1,12 +1,12 @@
-package networkgame.client;
+package networkgame.client.contentpane.lobby;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import networkgame.client.LobbyState.Direction;
-import networkgame.client.LobbyState.Player;
+import networkgame.client.contentpane.lobby.LobbyState.Direction;
+import networkgame.client.contentpane.lobby.LobbyState.Player;
 
 class LobbyStateTest {
     private final LobbyState state = new LobbyState();

@@ -1,4 +1,4 @@
-package networkgame.client;
+package networkgame.client.contentpane.lobby;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -6,17 +6,17 @@ import java.io.InputStream;
 import java.util.Locale;
 import javax.imageio.ImageIO;
 
-import networkgame.client.LobbyState.Direction;
+import networkgame.client.contentpane.lobby.LobbyState.Direction;
 
-final class LobbyAssets {
-    static final int CHARACTER_COUNT = 5;
+public final class LobbyAssets {
+    private static final int CHARACTER_COUNT = 4;
     private static final int WALK_FRAMES = 16;
 
     final BufferedImage map = read("map/lobby.png");
     private final BufferedImage[][][] sprites =
             new BufferedImage[CHARACTER_COUNT][Direction.values().length][WALK_FRAMES + 1];
 
-    LobbyAssets() throws IOException {
+    public LobbyAssets() throws IOException {
         for (int character = 0; character < CHARACTER_COUNT; character++) {
             String player = "player" + (character + 1);
             String base = "characters/round-cats/" + player + "/" + player;

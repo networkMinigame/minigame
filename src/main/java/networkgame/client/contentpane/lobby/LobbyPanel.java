@@ -1,4 +1,4 @@
-package networkgame.client;
+package networkgame.client.contentpane.lobby;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -8,7 +8,7 @@ import java.awt.RenderingHints;
 import java.util.Comparator;
 import javax.swing.JPanel;
 
-import networkgame.client.LobbyState.Player;
+import networkgame.client.contentpane.lobby.LobbyState.Player;
 
 final class LobbyPanel extends JPanel {
     private final LobbyState state;

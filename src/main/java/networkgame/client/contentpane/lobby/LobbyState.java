@@ -1,4 +1,4 @@
-package networkgame.client;
+package networkgame.client.contentpane.lobby;
 
 import java.util.LinkedHashMap;
 import java.util.List;
