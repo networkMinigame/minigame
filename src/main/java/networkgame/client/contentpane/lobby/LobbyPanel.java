@@ -8,6 +8,7 @@ import java.awt.RenderingHints;
 import java.util.Comparator;
 import javax.swing.JPanel;
 
+import networkgame.client.contentpane.lobby.assets.LobbyAssets;
 import networkgame.client.contentpane.lobby.LobbyState.Player;
 
 final class LobbyPanel extends JPanel {
@@ -32,16 +33,16 @@ final class LobbyPanel extends JPanel {
         super.paintComponent(graphics);
         Graphics2D canvas = (Graphics2D) graphics.create();
         try {
-            double scale = Math.min((double) getWidth() / assets.map.getWidth(),
-                    (double) getHeight() / assets.map.getHeight());
-            canvas.translate((getWidth() - assets.map.getWidth() * scale) / 2,
-                    (getHeight() - assets.map.getHeight() * scale) / 2);
+            double scale = Math.min((double) getWidth() / assets.map().getWidth(),
+                    (double) getHeight() / assets.map().getHeight());
+            canvas.translate((getWidth() - assets.map().getWidth() * scale) / 2,
+                    (getHeight() - assets.map().getHeight() * scale) / 2);
             canvas.scale(scale, scale);
-            canvas.clipRect(0, 0, assets.map.getWidth(), assets.map.getHeight());
+            canvas.clipRect(0, 0, assets.map().getWidth(), assets.map().getHeight());
             canvas.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
                     RenderingHints.VALUE_INTERPOLATION_BILINEAR);
             canvas.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            canvas.drawImage(assets.map, 0, 0, null);
+            canvas.drawImage(assets.map(), 0, 0, null);
             canvas.setFont(getFont().deriveFont(java.awt.Font.BOLD, 22f));
             state.findAll().stream().sorted(Comparator.comparingDouble(Player::y))
                     .forEach(player -> drawPlayer(canvas, player));

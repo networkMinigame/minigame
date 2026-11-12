@@ -15,6 +15,7 @@ import javax.swing.JPanel;
 import javax.swing.Timer;
 
 import networkgame.client.KeyCommandInvoker;
+import networkgame.client.contentpane.lobby.assets.LobbyAssets;
 import networkgame.client.contentpane.lobby.LobbyState.Player;
 import networkgame.protocol.Direction;
 
@@ -30,8 +31,8 @@ public final class LobbySession {
 
     public LobbySession(LobbyAssets assets, String name, int character) {
         this.assets = assets;
-        double centerX = assets.map.getWidth() / 2.0;
-        double centerY = assets.map.getHeight() / 2.0;
+        double centerX = assets.map().getWidth() / 2.0;
+        double centerY = assets.map().getHeight() / 2.0;
         state.save(new Player(LOCAL_PLAYER, name, character, centerX, centerY, Direction.DOWN, false));
     }
 
@@ -118,8 +119,8 @@ public final class LobbySession {
                 : (dx < 0 ? Direction.LEFT : Direction.RIGHT);
         double step = MOVE_STEP / Math.hypot(dx, dy);
         int size = LobbyStyle.SPRITE_SIZE;
-        double x = Math.clamp(player.x() + dx * step, size / 2, assets.map.getWidth() - size / 2);
-        double y = Math.clamp(player.y() + dy * step, size + 32, assets.map.getHeight());
+        double x = Math.clamp(player.x() + dx * step, size / 2, assets.map().getWidth() - size / 2);
+        double y = Math.clamp(player.y() + dy * step, size + 32, assets.map().getHeight());
         state.moveTo(LOCAL_PLAYER, x, y, facing);
     }
 }
