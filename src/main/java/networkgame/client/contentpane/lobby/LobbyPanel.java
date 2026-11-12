@@ -43,7 +43,7 @@ final class LobbyPanel extends JPanel {
             canvas.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             canvas.drawImage(assets.map, 0, 0, null);
             canvas.setFont(getFont().deriveFont(java.awt.Font.BOLD, 22f));
-            state.players().stream().sorted(Comparator.comparingDouble(Player::y))
+            state.findAll().stream().sorted(Comparator.comparingDouble(Player::y))
                     .forEach(player -> drawPlayer(canvas, player));
         } finally {
             canvas.dispose();

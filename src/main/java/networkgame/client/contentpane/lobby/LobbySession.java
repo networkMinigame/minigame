@@ -32,7 +32,7 @@ public final class LobbySession {
         this.assets = assets;
         double centerX = assets.map.getWidth() / 2.0;
         double centerY = assets.map.getHeight() / 2.0;
-        state.put(new Player(LOCAL_PLAYER, name, character, centerX, centerY, Direction.DOWN, false));
+        state.save(new Player(LOCAL_PLAYER, name, character, centerX, centerY, Direction.DOWN, false));
     }
 
     public void show() {
@@ -105,12 +105,12 @@ public final class LobbySession {
     }
 
     private void moveLocalPlayer() {
-        Player player = state.player(LOCAL_PLAYER);
+        Player player = state.findByPlayerId(LOCAL_PLAYER);
         int dx = (pressed.contains(Direction.RIGHT) ? 1 : 0) - (pressed.contains(Direction.LEFT) ? 1 : 0);
         int dy = (pressed.contains(Direction.DOWN) ? 1 : 0) - (pressed.contains(Direction.UP) ? 1 : 0);
         if (dx == 0 && dy == 0) {
             if (player.walking()) {
-                state.move(LOCAL_PLAYER, player.x(), player.y(), player.direction(), false);
+                state.moveTo(LOCAL_PLAYER, player.x(), player.y(), player.direction());
             }
             return;
         }
@@ -120,6 +120,6 @@ public final class LobbySession {
         int size = LobbyStyle.SPRITE_SIZE;
         double x = Math.clamp(player.x() + dx * step, size / 2, assets.map.getWidth() - size / 2);
         double y = Math.clamp(player.y() + dy * step, size + 32, assets.map.getHeight());
-        state.move(LOCAL_PLAYER, x, y, facing, x != player.x() || y != player.y());
+        state.moveTo(LOCAL_PLAYER, x, y, facing);
     }
 }
