@@ -16,24 +16,24 @@ import javax.swing.Timer;
 
 import networkgame.client.KeyCommandInvoker;
 import networkgame.client.contentpane.lobby.assets.LobbyAssets;
-import networkgame.client.contentpane.lobby.LobbyState.Player;
 import networkgame.protocol.Direction;
 
 /** Runs the offline lobby and owns its input and frame timer on the EDT. */
 public final class LobbySession {
     private static final int LOCAL_PLAYER = 1;
-    private static final double MOVE_STEP = 5;
 
     private final JFrame window = new JFrame("미니게임 · 로비");
     private final LobbyAssets assets;
     private final LobbyState state = new LobbyState();
+    private final LobbyMovement movement;
     private final EnumSet<Direction> pressed = EnumSet.noneOf(Direction.class);
 
     public LobbySession(LobbyAssets assets, String name, int character) {
         this.assets = assets;
-        double centerX = assets.map().getWidth() / 2.0;
-        double centerY = assets.map().getHeight() / 2.0;
-        state.save(new Player(LOCAL_PLAYER, name, character, centerX, centerY, Direction.DOWN, false));
+        int mapWidth = assets.map().getWidth();
+        int mapHeight = assets.map().getHeight();
+        this.movement = new LobbyMovement(mapWidth, mapHeight);
+        state.save(new Player(LOCAL_PLAYER, name, character, mapWidth / 2.0, mapHeight / 2.0, Direction.DOWN, false));
     }
 
     public void show() {
@@ -107,20 +107,6 @@ public final class LobbySession {
 
     private void moveLocalPlayer() {
         Player player = state.findByPlayerId(LOCAL_PLAYER);
-        int dx = (pressed.contains(Direction.RIGHT) ? 1 : 0) - (pressed.contains(Direction.LEFT) ? 1 : 0);
-        int dy = (pressed.contains(Direction.DOWN) ? 1 : 0) - (pressed.contains(Direction.UP) ? 1 : 0);
-        if (dx == 0 && dy == 0) {
-            if (player.walking()) {
-                state.moveTo(LOCAL_PLAYER, player.x(), player.y(), player.direction());
-            }
-            return;
-        }
-        Direction facing = dx == 0 ? (dy < 0 ? Direction.UP : Direction.DOWN)
-                : (dx < 0 ? Direction.LEFT : Direction.RIGHT);
-        double step = MOVE_STEP / Math.hypot(dx, dy);
-        int size = LobbyStyle.SPRITE_SIZE;
-        double x = Math.clamp(player.x() + dx * step, size / 2, assets.map().getWidth() - size / 2);
-        double y = Math.clamp(player.y() + dy * step, size + 32, assets.map().getHeight());
-        state.moveTo(LOCAL_PLAYER, x, y, facing);
+        state.save(movement.next(player, pressed));
     }
 }

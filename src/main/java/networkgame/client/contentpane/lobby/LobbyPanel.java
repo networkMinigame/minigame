@@ -9,7 +9,6 @@ import java.util.Comparator;
 import javax.swing.JPanel;
 
 import networkgame.client.contentpane.lobby.assets.LobbyAssets;
-import networkgame.client.contentpane.lobby.LobbyState.Player;
 
 final class LobbyPanel extends JPanel {
     private final LobbyState state;
