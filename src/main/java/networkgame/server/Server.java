@@ -5,15 +5,12 @@ import networkgame.server.session.Session;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Scanner;
 
 import static networkgame.util.Log.log;
 
 public class Server {
 
     private final int port;
-    private ServerSocket listener;
-    private final SessionManager sessionManager = new SessionManager();
 
     public Server(int port) {
         this.port = port;
@@ -21,27 +18,26 @@ public class Server {
 
     public void start() throws IOException {
         log("서버 소켓 연결 대기");
-        listener = new ServerSocket(port);
-        log("서버 소켓 요청 대기");
-
-        new Thread(this::readConsole, "console").start();
-
-        while (true) {
-            Socket socket = listener.accept();
-            log("접속 " + socket.getRemoteSocketAddress());
-            new Session(socket, sessionManager, "guest-" + socket.getPort());
-        }
-    }
-
-    // 콘솔은 여기서만 읽는다. 세션마다 Scanner를 만들면 여러 Scanner가 콘솔 줄을 나눠 가져간다.
-    private void readConsole() {
-        Scanner scanner = new Scanner(System.in);
-        while (scanner.hasNextLine()) {
-            String line = scanner.nextLine();
-            if (line.isBlank()) {
-                continue;
+        DispatcherLoop dispatcherLoop = new DispatcherLoop();
+        try (ServerSocket listener = new ServerSocket(port)) {
+            log("서버 소켓 요청 대기");
+            Thread loopThread = Thread.ofPlatform().name("dispatcher-loop").start(dispatcherLoop);
+            try {
+                while (true) {
+                    Socket socket = listener.accept();
+                    try {
+                        socket.setTcpNoDelay(true);
+                    } catch (IOException e) {
+                        socket.close();
+                        log("접속 설정 실패 " + e.getMessage());
+                        continue;
+                    }
+                    log("접속 " + socket.getRemoteSocketAddress());
+                    new Session(socket, dispatcherLoop);
+                }
+            } finally {
+                loopThread.interrupt();
             }
-            sessionManager.broadcast(line);
         }
     }
 }

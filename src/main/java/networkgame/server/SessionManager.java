@@ -1,55 +1,58 @@
 package networkgame.server;
 
-import networkgame.server.session.Session;
+import networkgame.protocol.Direction;
+import networkgame.protocol.PlayerInfo;
+import networkgame.protocol.ServerMsg;
 
-import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.BlockingQueue;
 
-public class SessionManager {
+/** 입장자 목록을 관리한다. DispatcherLoop 스레드에서만 사용한다. */
+final class SessionManager {
+    private static final int MAX_PLAYERS = 4;
+    private static final int SPAWN_X = 836;
+    private static final int SPAWN_Y = 470;
+    private static final int SPAWN_SPACING = 120;
 
-    private final List<Session> sessions = new ArrayList<>();
+    private final Map<BlockingQueue<ServerMsg>, PlayerInfo> players = new LinkedHashMap<>();
 
-    // crud
+    /** 새 플레이어를 등록한다. 이미 입장했거나 정원이 찼으면 null을 반환한다. */
+    PlayerInfo register(BlockingQueue<ServerMsg> sendQueue, String name, int character) {
+        if (players.containsKey(sendQueue) || players.size() == MAX_PLAYERS) {
+            return null;
+        }
 
-    // create
-    public synchronized void add(Session session) {
-        sessions.add(session);
+        int id = availableId();
+        PlayerInfo player = new PlayerInfo(id, name, character,
+                SPAWN_X + id * SPAWN_SPACING, SPAWN_Y, Direction.DOWN);
+        players.put(sendQueue, player);
+        return player;
     }
 
-    // retrieve 조회
-    // 단건 조회
-    public synchronized Session findByName(String name) {
-        for (Session session : sessions) {
-            if(session.getName().equals(name)) {
-                return session;
+    void remove(BlockingQueue<ServerMsg> sendQueue) {
+        players.remove(sendQueue);
+    }
+
+    List<PlayerInfo> players() {
+        return List.copyOf(players.values());
+    }
+
+    List<BlockingQueue<ServerMsg>> sendQueues() {
+        return List.copyOf(players.keySet());
+    }
+
+    private int availableId() {
+        boolean[] used = new boolean[MAX_PLAYERS];
+        for (PlayerInfo player : players.values()) {
+            used[player.id()] = true;
+        }
+        for (int id = 0; id < MAX_PLAYERS; id++) {
+            if (!used[id]) {
+                return id;
             }
         }
-
-        return null; // 없을 경우
+        throw new IllegalStateException("빈 플레이어 ID가 없습니다.");
     }
-
-    public synchronized void remove(Session session) {
-        sessions.remove(session);
-    }
-
-    // 잠금 안에서 모두에게 넣는다. 잠금 밖에서 넣으면 두 사람이 동시에 보낼 때 받는 사람마다 순서가 달라질 수 있다.
-    public synchronized void broadcast(String message) {
-        for (Session session : sessions) {
-            session.send(message);
-        }
-    }
-
-    // 복사본을 돈다. session.close()가 remove()로 자기를 빼기 때문에 원본을 돌면 ConcurrentModificationException이 난다.
-    public void closeAll() {
-        List<Session> snapshot;
-        synchronized (this) {
-            snapshot = new ArrayList<>(sessions);
-        }
-
-        for (Session session : snapshot) {
-            session.close();
-        }
-    }
-
-    // 전체 조회
 }
