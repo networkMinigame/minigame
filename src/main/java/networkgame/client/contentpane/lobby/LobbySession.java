@@ -1,12 +1,9 @@
 package networkgame.client.contentpane.lobby;
 
-import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.Set;
-import javax.swing.BorderFactory;
-import javax.swing.JLabel;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.Timer;
@@ -47,7 +44,7 @@ public final class LobbySession {
     /** 창을 띄우고 {@value #FRAME_MILLIS}ms마다 내 고양이를 옮기고 다시 그린다. 창을 닫으면 멈춘다. */
     public void show() {
         LobbyPanel lobby = new LobbyPanel(state, assets);
-        configureWindow(createContentPane(lobby));
+        configureWindow(lobby);
         ArrowKeys keys = new ArrowKeys(window);
 
         // 16ms마다 EDT에서 눌린 방향키에 따라 고양이 위치를 갱신하고 화면을 다시 그리도록 요청합니다.
@@ -58,22 +55,6 @@ public final class LobbySession {
         stopOnClose(timer);
         window.setVisible(true);
         timer.start();
-    }
-
-    private JPanel createContentPane(LobbyPanel lobby) {
-        JPanel content = new JPanel(new BorderLayout());
-        content.add(lobby, BorderLayout.CENTER);
-        content.add(createHint(), BorderLayout.SOUTH);
-        return content;
-    }
-
-    private JLabel createHint() {
-        JLabel hint = new JLabel("오프라인 로비   ·   방향키로 이동");
-        hint.setOpaque(true);
-        hint.setBackground(LobbyStyle.PAPER);
-        hint.setForeground(LobbyStyle.INK);
-        hint.setBorder(BorderFactory.createEmptyBorder(10, 16, 10, 16));
-        return hint;
     }
 
     // pack()은 내용이 들어간 뒤에, 가운데 놓기는 pack()으로 크기가 정해진 뒤에 해야 해서 이 순서를 지킨다.
