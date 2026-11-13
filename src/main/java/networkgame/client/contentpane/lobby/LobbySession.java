@@ -1,67 +1,60 @@
 package networkgame.client.contentpane.lobby;
 
-import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.awt.KeyEventDispatcher;
-import java.awt.KeyboardFocusManager;
-import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.util.EnumSet;
-import javax.swing.BorderFactory;
+import java.util.Set;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.Timer;
 
-import networkgame.client.KeyCommandInvoker;
-import networkgame.client.contentpane.lobby.LobbyState.Player;
+import networkgame.client.contentpane.lobby.assets.LobbyAssets;
+import networkgame.client.input.ArrowKeys;
 import networkgame.protocol.Direction;
 
-/** Runs the offline lobby and owns its input and frame timer on the EDT. */
+/**
+ * 로비 창 하나를 띄우고, 정해진 주기마다 내 고양이를 옮기고 다시 그린다.
+ * <p>생성자를 포함한 모든 메서드는 EDT에서 부른다. 생성할 때 {@link JFrame}을 만들고, 타이머와 키 입력도 EDT에서 돌아서
+ * {@link LobbyState}를 락 없이 바꾼다.
+ */
 public final class LobbySession {
+    // 오프라인이라 내 playerId를 고정해 둔다. 서버에 연결하면 WELCOME으로 받은 id로 바뀐다.
     private static final int LOCAL_PLAYER = 1;
-    private static final double MOVE_STEP = 5;
+    // 약 60fps.
+    private static final int FRAME_MILLIS = 16;
 
     private final JFrame window = new JFrame("미니게임 · 로비");
     private final LobbyAssets assets;
     private final LobbyState state = new LobbyState();
-    private final EnumSet<Direction> pressed = EnumSet.noneOf(Direction.class);
+    private final LobbyMovement movement;
 
+    /**
+     * 내 고양이를 지도 가운데에 아래를 보고 서 있는 상태로 넣는다. 창은 {@link #show()}를 불러야 뜬다.
+     *
+     * @param character 고양이 번호. 0 이상, 고양이 수 미만
+     */
     public LobbySession(LobbyAssets assets, String name, int character) {
         this.assets = assets;
-        double centerX = assets.map.getWidth() / 2.0;
-        double centerY = assets.map.getHeight() / 2.0;
-        state.put(new Player(LOCAL_PLAYER, name, character, centerX, centerY, Direction.DOWN, false));
+        int mapWidth = assets.map().getWidth();
+        int mapHeight = assets.map().getHeight();
+        this.movement = new LobbyMovement(mapWidth, mapHeight);
+        state.save(new Player(LOCAL_PLAYER, name, character, mapWidth / 2.0, mapHeight / 2.0, Direction.DOWN, false));
     }
 
+    /** 창을 띄우고 {@value #FRAME_MILLIS}ms마다 내 고양이를 옮기고 다시 그린다. 창을 닫으면 멈춘다. */
     public void show() {
         LobbyPanel lobby = new LobbyPanel(state, assets);
-        configureWindow(createContentPane(lobby));
+        configureWindow(lobby);
+        ArrowKeys keys = new ArrowKeys(window);
 
-        Timer timer = new Timer(16, event -> {
-            moveLocalPlayer();
+        // 16ms마다 EDT에서 눌린 방향키에 따라 고양이 위치를 갱신하고 화면을 다시 그리도록 요청합니다.
+        Timer timer = new Timer(FRAME_MILLIS, event -> {
+            moveLocalPlayer(keys.pressed());
             lobby.renderFrame();
         });
-        installControls(timer);
+        stopOnClose(timer);
         window.setVisible(true);
         timer.start();
-    }
-
-    private JPanel createContentPane(LobbyPanel lobby) {
-        JPanel content = new JPanel(new BorderLayout());
-        content.add(lobby, BorderLayout.CENTER);
-        content.add(createHint(), BorderLayout.SOUTH);
-        return content;
-    }
-
-    private JLabel createHint() {
-        JLabel hint = new JLabel("오프라인 로비   ·   방향키로 이동");
-        hint.setOpaque(true);
-        hint.setBackground(LobbyStyle.PAPER);
-        hint.setForeground(LobbyStyle.INK);
-        hint.setBorder(BorderFactory.createEmptyBorder(10, 16, 10, 16));
-        return hint;
     }
 
     // pack()은 내용이 들어간 뒤에, 가운데 놓기는 pack()으로 크기가 정해진 뒤에 해야 해서 이 순서를 지킨다.
@@ -74,52 +67,17 @@ public final class LobbySession {
         window.setLocationRelativeTo(null);
     }
 
-    private void installControls(Timer timer) {
-        KeyCommandInvoker invoker = new KeyCommandInvoker();
-        bindDirection(invoker, KeyEvent.VK_UP, Direction.UP);
-        bindDirection(invoker, KeyEvent.VK_DOWN, Direction.DOWN);
-        bindDirection(invoker, KeyEvent.VK_LEFT, Direction.LEFT);
-        bindDirection(invoker, KeyEvent.VK_RIGHT, Direction.RIGHT);
-
-        KeyboardFocusManager focus = KeyboardFocusManager.getCurrentKeyboardFocusManager();
-        KeyEventDispatcher dispatcher = event -> window.isFocused() && invoker.dispatchKeyEvent(event);
-        focus.addKeyEventDispatcher(dispatcher);
-        WindowAdapter lifecycle = new WindowAdapter() {
-            @Override
-            public void windowLostFocus(WindowEvent event) {
-                pressed.clear();
-            }
-
+    private void stopOnClose(Timer timer) {
+        window.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosed(WindowEvent event) {
-                focus.removeKeyEventDispatcher(dispatcher);
                 timer.stop();
             }
-        };
-        window.addWindowFocusListener(lifecycle);
-        window.addWindowListener(lifecycle);
+        });
     }
 
-    private void bindDirection(KeyCommandInvoker invoker, int keyCode, Direction direction) {
-        invoker.bind(keyCode, () -> pressed.add(direction), () -> pressed.remove(direction));
-    }
-
-    private void moveLocalPlayer() {
-        Player player = state.player(LOCAL_PLAYER);
-        int dx = (pressed.contains(Direction.RIGHT) ? 1 : 0) - (pressed.contains(Direction.LEFT) ? 1 : 0);
-        int dy = (pressed.contains(Direction.DOWN) ? 1 : 0) - (pressed.contains(Direction.UP) ? 1 : 0);
-        if (dx == 0 && dy == 0) {
-            if (player.walking()) {
-                state.move(LOCAL_PLAYER, player.x(), player.y(), player.direction(), false);
-            }
-            return;
-        }
-        Direction facing = dx == 0 ? (dy < 0 ? Direction.UP : Direction.DOWN)
-                : (dx < 0 ? Direction.LEFT : Direction.RIGHT);
-        double step = MOVE_STEP / Math.hypot(dx, dy);
-        int size = LobbyStyle.SPRITE_SIZE;
-        double x = Math.clamp(player.x() + dx * step, size / 2, assets.map.getWidth() - size / 2);
-        double y = Math.clamp(player.y() + dy * step, size + 32, assets.map.getHeight());
-        state.move(LOCAL_PLAYER, x, y, facing, x != player.x() || y != player.y());
+    private void moveLocalPlayer(Set<Direction> pressed) {
+        Player player = state.findByPlayerId(LOCAL_PLAYER);
+        state.save(movement.next(player, pressed));
     }
 }

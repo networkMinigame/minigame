@@ -6,34 +6,49 @@ import java.util.Map;
 
 import networkgame.protocol.Direction;
 
-/** Swing 이벤트 디스패치 스레드에서 관리하는 로비의 플레이어 상태. */
+/**
+ * 로비에 그릴 플레이어 상태. EDT에서만 읽고 바꾼다. 네트워크 스레드는 {@code invokeLater}로 넘겨서 바꾼다.
+ */
 final class LobbyState {
-    record Player(int playerId, String name, int character, double x, double y,
-                  Direction direction, boolean walking) {
-    }
 
+    // playerId → Player. 목록을 들어온 순서대로 돌려주려고 LinkedHashMap을 쓴다.
     private final Map<Integer, Player> players = new LinkedHashMap<>();
 
-    void put(Player player) {
+    /**
+     * 플레이어를 새 좌표와 방향으로 옮긴다. 이름과 캐릭터는 그대로 둔다.
+     * 목록에 없는 {@code playerId}면 아무것도 하지 않는다.
+     */
+    void moveTo(int playerId, double x, double y, Direction direction) {
+        players.computeIfPresent(playerId, (id, player) -> player.moveTo(x, y, direction));
+    }
+
+    /**
+     * 플레이어를 넣는다. 같은 {@code playerId}가 이미 있으면 덮어쓰고, 목록 순서는 처음 들어온 자리를 유지한다.
+     */
+    void save(Player player) {
         players.put(player.playerId(), player);
     }
 
-    void remove(int playerId) {
+    /** 플레이어 한 명을 목록에서 뺀다. 목록에 없는 {@code playerId}면 아무것도 하지 않는다. */
+    void removeByPlayerId(int playerId) {
         players.remove(playerId);
     }
 
-    Player player(int playerId) {
+    /**
+     * 플레이어 한 명을 찾는다.
+     *
+     * @return {@code playerId}를 가진 플레이어. 목록에 없으면 {@code null}
+     */
+    Player findByPlayerId(int playerId) {
         return players.get(playerId);
     }
 
-    void move(int playerId, double x, double y, Direction direction, boolean walking) {
-        Player player = players.get(playerId);
-        if (player != null) {
-            put(new Player(playerId, player.name(), player.character(), x, y, direction, walking));
-        }
-    }
-
-    List<Player> players() {
+    /**
+     * 전체 플레이어를 찾는다.
+     *
+     * @return 지금 목록을 복사한 리스트. 고칠 수 없고, 나중에 상태가 바뀌어도 달라지지 않는다
+     */
+    List<Player> findAll() {
         return List.copyOf(players.values());
     }
 }
