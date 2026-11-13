@@ -1,5 +1,8 @@
 package networkgame.client;
 
+import networkgame.client.handler.ReadHandler;
+import networkgame.client.handler.WriteHandler;
+
 import java.io.IOException;
 import java.net.Socket;
 import java.util.concurrent.BlockingQueue;
