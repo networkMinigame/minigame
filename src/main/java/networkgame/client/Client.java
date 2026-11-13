@@ -2,6 +2,7 @@ package networkgame.client;
 
 import networkgame.client.handler.ReadHandler;
 import networkgame.client.handler.WriteHandler;
+import networkgame.protocol.ClientMsg;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -14,7 +15,7 @@ import static networkgame.util.Log.log;
 public class Client {
 
     private final Socket socket;
-    private final BlockingQueue<String> sendQueue = new LinkedBlockingQueue<>();
+    private final BlockingQueue<ClientMsg> sendQueue = new LinkedBlockingQueue<>();
     private final Thread readThread;
     private final Thread writeThread;
     private final AtomicBoolean closed = new AtomicBoolean();
