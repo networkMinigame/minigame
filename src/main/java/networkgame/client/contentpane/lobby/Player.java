@@ -1,6 +1,7 @@
 package networkgame.client.contentpane.lobby;
 
 import networkgame.protocol.Direction;
+import networkgame.protocol.PlayerInfo;
 
 /**
  * 로비에 그릴 플레이어 한 명.
@@ -34,5 +35,22 @@ record Player(int playerId,
      */
     Player stop() {
         return moveTo(x, y, direction);
+    }
+
+    /**
+     * 서버가 보낸 PlayerInfo를 멈춰 있는 Player로 바꾸는 메서드
+     * @param playerInfo 플레이어 정보 walking 정보만 빼고 Player와 동일합니다.
+     * @return Player(walking = false)
+     */
+    static Player from(PlayerInfo playerInfo) {
+        return new Player(
+                playerInfo.id(),
+                playerInfo.name(),
+                playerInfo.character(),
+                playerInfo.x(),
+                playerInfo.y(),
+                playerInfo.direction(),
+                false
+        );
     }
 }
