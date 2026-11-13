@@ -1,0 +1,138 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1500 1070" width="1500" height="1070" font-family="Pretendard, 'Malgun Gothic', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif">
+<rect width="1500" height="1070" rx="12" fill="#ffffff"/>
+<defs><marker id="arrow-tcp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#57606a"/></marker><marker id="arrow-recv" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#0969da"/></marker><marker id="arrow-loop" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#1a7f37"/></marker><marker id="arrow-send" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#bf8700"/></marker><marker id="arrow-make" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#8c959f"/></marker><marker id="arrow-close" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#cf222e"/></marker></defs>
+<text x="40" y="46" font-size="26" font-weight="700" text-anchor="start" dominant-baseline="middle" fill="#1f2328">클라이언트 메시지 흐름 상세</text>
+<text x="1460" y="46" font-size="14" font-weight="400" text-anchor="end" dominant-baseline="middle" fill="#57606a">v2  |  받기 · 보내기 · 끝내기</text>
+<rect x="30" y="80" width="1440" height="360" rx="12" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.6"/>
+<text x="50" y="106" font-size="17" font-weight="700" text-anchor="start" dominant-baseline="middle" fill="#1f2328">① 받기: 서버가 보낸 한 줄이 화면에 그려지기까지</text>
+<text x="1452" y="106" font-size="12" font-weight="400" text-anchor="end" dominant-baseline="middle" fill="#57606a">Reader는 화면을 고치지 않는다</text>
+<rect x="50" y="145" width="130" height="60" rx="8" fill="#ffffff" stroke="#0969da" stroke-width="1.6"/>
+<text x="115.0" y="175.0" font-size="15" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">Reader 스레드</text>
+<rect x="50" y="315" width="130" height="60" rx="8" fill="#eef4ff" stroke="#0969da" stroke-width="1.6"/>
+<text x="115.0" y="345.0" font-size="15" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">EDT</text>
+<rect x="200" y="135" width="180" height="80" rx="8" fill="#ffffff" stroke="#0969da" stroke-width="1.6"/>
+<text x="290.0" y="165.0" font-size="15" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">readLine()</text>
+<text x="290.0" y="185.0" font-size="13" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">한 줄 읽기</text>
+<rect x="420" y="135" width="180" height="80" rx="8" fill="#ffffff" stroke="#0969da" stroke-width="1.6"/>
+<text x="510.0" y="165.0" font-size="15" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">빈 줄?</text>
+<text x="510.0" y="185.0" font-size="13" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">그러면 건너뜀</text>
+<rect x="640" y="135" width="200" height="80" rx="8" fill="#ffffff" stroke="#0969da" stroke-width="1.6"/>
+<text x="740.0" y="165.0" font-size="15" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">decodeServer(line)</text>
+<text x="740.0" y="185.0" font-size="13" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">JSON → ServerMsg</text>
+<rect x="880" y="135" width="200" height="80" rx="8" fill="#ffffff" stroke="#0969da" stroke-width="1.6"/>
+<text x="980.0" y="165.0" font-size="15" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">onMessage.accept()</text>
+<text x="980.0" y="185.0" font-size="13" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">LobbySession이 준 콜백</text>
+<rect x="1120" y="135" width="200" height="80" rx="8" fill="#fff8c5" stroke="#bf8700" stroke-width="1.6"/>
+<text x="1220.0" y="165.0" font-size="15" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">invokeLater</text>
+<text x="1220.0" y="185.0" font-size="13" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">EDT 이벤트 큐에 넣기</text>
+<rect x="620" y="226" width="240" height="30" rx="8" fill="#ffebe9" stroke="#cf222e" stroke-width="1.6"/>
+<text x="740.0" y="241.0" font-size="12" font-weight="500" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">JacksonException → 로그만 남기고 다음 줄</text>
+<path d="M 382 175 L 418 175" fill="none" stroke="#0969da" stroke-width="1.8" marker-end="url(#arrow-recv)"/>
+<path d="M 602 175 L 638 175" fill="none" stroke="#0969da" stroke-width="1.8" marker-end="url(#arrow-recv)"/>
+<path d="M 842 175 L 878 175" fill="none" stroke="#0969da" stroke-width="1.8" marker-end="url(#arrow-recv)"/>
+<path d="M 1082 175 L 1118 175" fill="none" stroke="#0969da" stroke-width="1.8" marker-end="url(#arrow-recv)"/>
+<line x1="190" y1="276" x2="1450" y2="276" stroke="#d0d7de" stroke-width="1.6"/>
+<text x="1450" y="266" font-size="12" font-weight="400" text-anchor="end" dominant-baseline="middle" fill="#57606a">여기서 스레드가 바뀐다</text>
+<path d="M 1220 217 L 1220 298" fill="none" stroke="#0969da" stroke-width="1.8" marker-end="url(#arrow-recv)"/>
+<rect x="1179" y="240" width="82" height="18" rx="4" fill="#ffffff"/>
+<text x="1220" y="250" font-size="11" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#0969da">EDT에서 실행</text>
+<rect x="1140" y="300" width="180" height="100" rx="8" fill="#ffffff" stroke="#0969da" stroke-width="1.6"/>
+<text x="1230.0" y="330.0" font-size="15" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">handle(message)</text>
+<text x="1230.0" y="350.0" font-size="13" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">sealed switch</text>
+<text x="1230.0" y="370.0" font-size="13" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">9개 case</text>
+<rect x="860" y="290" width="250" height="34" rx="8" fill="#ffffff" stroke="#0969da" stroke-width="1.6"/>
+<text x="985.0" y="307.0" font-size="12" font-weight="500" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">WELCOME → state.welcome(id, 목록)</text>
+<rect x="860" y="333" width="250" height="34" rx="8" fill="#ffffff" stroke="#0969da" stroke-width="1.6"/>
+<text x="985.0" y="350.0" font-size="12" font-weight="500" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">JOINED → state.save(Player.from(p))</text>
+<rect x="860" y="376" width="250" height="34" rx="8" fill="#ffffff" stroke="#d0d7de" stroke-width="1.6"/>
+<text x="985.0" y="393.0" font-size="12" font-weight="500" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">그 외 7개 → 지금은 무시 (#35~#38)</text>
+<path d="M 1138 307 L 1112 307" fill="none" stroke="#0969da" stroke-width="1.8" marker-end="url(#arrow-recv)"/>
+<path d="M 1138 350 L 1112 350" fill="none" stroke="#0969da" stroke-width="1.8" marker-end="url(#arrow-recv)"/>
+<path d="M 1138 393 L 1112 393" fill="none" stroke="#0969da" stroke-width="1.8" marker-end="url(#arrow-recv)"/>
+<rect x="620" y="310" width="200" height="80" rx="8" fill="#dafbe1" stroke="#1a7f37" stroke-width="1.6"/>
+<text x="720.0" y="340.0" font-size="15" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">LobbyState</text>
+<text x="720.0" y="360.0" font-size="13" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">접속자 · 내 playerId</text>
+<path d="M 858 307 L 840 307 L 840 335 L 822 335" fill="none" stroke="#0969da" stroke-width="1.8" marker-end="url(#arrow-recv)"/>
+<path d="M 858 350 L 822 350" fill="none" stroke="#0969da" stroke-width="1.8" marker-end="url(#arrow-recv)"/>
+<rect x="380" y="310" width="200" height="80" rx="8" fill="#ffffff" stroke="#0969da" stroke-width="1.6"/>
+<text x="480.0" y="340.0" font-size="15" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">Timer 16ms</text>
+<text x="480.0" y="360.0" font-size="13" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">moveLocalPlayer()</text>
+<path d="M 582 350 L 618 350" fill="none" stroke="#8c959f" stroke-width="1.8" marker-end="url(#arrow-make)"/>
+<rect x="200" y="310" width="140" height="80" rx="8" fill="#ffffff" stroke="#0969da" stroke-width="1.6"/>
+<text x="270.0" y="340.0" font-size="15" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">LobbyPanel</text>
+<text x="270.0" y="360.0" font-size="13" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">다시 그림</text>
+<path d="M 378 350 L 342 350" fill="none" stroke="#8c959f" stroke-width="1.8" marker-end="url(#arrow-make)"/>
+<text x="480" y="414" font-size="12" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">WELCOME 전에는 내 플레이어가 없어서 이동을 건너뜀</text>
+<rect x="30" y="460" width="1440" height="170" rx="12" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.6"/>
+<text x="50" y="486" font-size="17" font-weight="700" text-anchor="start" dominant-baseline="middle" fill="#1f2328">② 보내기: 입장할 때 JOIN 한 번</text>
+<text x="1452" y="486" font-size="12" font-weight="400" text-anchor="end" dominant-baseline="middle" fill="#57606a">EDT는 소켓에 직접 쓰지 않는다</text>
+<rect x="50" y="515" width="130" height="60" rx="8" fill="#eef4ff" stroke="#0969da" stroke-width="1.6"/>
+<text x="115.0" y="545.0" font-size="15" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">EDT</text>
+<rect x="200" y="510" width="220" height="70" rx="8" fill="#ffffff" stroke="#0969da" stroke-width="1.6"/>
+<text x="310.0" y="535.0" font-size="15" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">show() 끝</text>
+<text x="310.0" y="555.0" font-size="13" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">client.start(콜백) 다음</text>
+<rect x="460" y="510" width="220" height="70" rx="8" fill="#ffffff" stroke="#0969da" stroke-width="1.6"/>
+<text x="570.0" y="535.0" font-size="15" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">client.send(join)</text>
+<text x="570.0" y="555.0" font-size="13" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">큐에 넣고 바로 돌아옴</text>
+<rect x="720" y="510" width="170" height="70" rx="8" fill="#fff8c5" stroke="#bf8700" stroke-width="1.6"/>
+<text x="805.0" y="535.0" font-size="15" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">sendQueue</text>
+<text x="805.0" y="555.0" font-size="13" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">LinkedBlockingQueue</text>
+<rect x="930" y="510" width="240" height="70" rx="8" fill="#ffffff" stroke="#0969da" stroke-width="1.6"/>
+<text x="1050.0" y="535.0" font-size="15" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">Writer 스레드: take()</text>
+<text x="1050.0" y="555.0" font-size="13" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">비어 있으면 잠들어 기다림</text>
+<rect x="1210" y="510" width="230" height="70" rx="8" fill="#ffffff" stroke="#0969da" stroke-width="1.6"/>
+<text x="1325.0" y="535.0" font-size="15" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">encode → write</text>
+<text x="1325.0" y="555.0" font-size="13" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">newLine · flush</text>
+<path d="M 422 545 L 458 545" fill="none" stroke="#bf8700" stroke-width="1.8" marker-end="url(#arrow-send)"/>
+<path d="M 682 545 L 718 545" fill="none" stroke="#bf8700" stroke-width="1.8" marker-end="url(#arrow-send)"/>
+<path d="M 1172 545 L 1208 545" fill="none" stroke="#bf8700" stroke-width="1.8" marker-end="url(#arrow-send)"/>
+<path d="M 892 545 L 928 545" fill="none" stroke="#bf8700" stroke-width="1.8" marker-end="url(#arrow-send)"/>
+<text x="60" y="606" font-size="12" font-weight="400" text-anchor="start" dominant-baseline="middle" fill="#57606a">add()는 크기 제한이 없는 큐라 막히지 않는다. 기다리는 쪽은 Writer의 take()뿐이다.</text>
+<rect x="30" y="650" width="1440" height="340" rx="12" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.6"/>
+<text x="50" y="676" font-size="17" font-weight="700" text-anchor="start" dominant-baseline="middle" fill="#1f2328">③ 끝내기: 누가 먼저 부르든 close()는 한 번</text>
+<text x="1452" y="676" font-size="12" font-weight="400" text-anchor="end" dominant-baseline="middle" fill="#57606a">스레드 3개가 같은 close()를 부를 수 있다</text>
+<rect x="60" y="700" width="300" height="64" rx="8" fill="#eef4ff" stroke="#0969da" stroke-width="1.6"/>
+<text x="210.0" y="722.0" font-size="15" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">창 닫기</text>
+<text x="210.0" y="742.0" font-size="13" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">EDT windowClosed: timer.stop() 다음</text>
+<rect x="60" y="780" width="300" height="64" rx="8" fill="#ffffff" stroke="#0969da" stroke-width="1.6"/>
+<text x="210.0" y="802.0" font-size="15" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">서버가 끊음</text>
+<text x="210.0" y="822.0" font-size="13" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">Reader: readLine() 예외나 null → finally</text>
+<rect x="60" y="860" width="300" height="64" rx="8" fill="#ffffff" stroke="#0969da" stroke-width="1.6"/>
+<text x="210.0" y="882.0" font-size="15" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">쓰기 실패</text>
+<text x="210.0" y="902.0" font-size="13" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">Writer: write 예외 → finally</text>
+<rect x="430" y="760" width="240" height="100" rx="8" fill="#ffebe9" stroke="#cf222e" stroke-width="1.6"/>
+<text x="550.0" y="790.0" font-size="15" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">close()</text>
+<text x="550.0" y="810.0" font-size="13" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">compareAndSet으로 한 번만</text>
+<text x="550.0" y="830.0" font-size="13" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">두 번째부터는 그냥 리턴</text>
+<path d="M 362 732 L 395 732 L 395 790 L 428 790" fill="none" stroke="#cf222e" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#arrow-close)"/>
+<path d="M 362 812 L 428 812" fill="none" stroke="#cf222e" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#arrow-close)"/>
+<path d="M 362 892 L 395 892 L 395 835 L 428 835" fill="none" stroke="#cf222e" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#arrow-close)"/>
+<rect x="740" y="720" width="240" height="64" rx="8" fill="#ffebe9" stroke="#cf222e" stroke-width="1.6"/>
+<text x="860.0" y="742.0" font-size="15" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">socket.close()</text>
+<text x="860.0" y="762.0" font-size="13" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">Reader를 깨움</text>
+<rect x="740" y="820" width="240" height="64" rx="8" fill="#ffebe9" stroke="#cf222e" stroke-width="1.6"/>
+<text x="860.0" y="842.0" font-size="15" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">Writer interrupt()</text>
+<text x="860.0" y="862.0" font-size="13" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">take()는 소켓으로 안 깨서</text>
+<path d="M 672 790 L 705 790 L 705 752 L 738 752" fill="none" stroke="#cf222e" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#arrow-close)"/>
+<path d="M 672 830 L 705 830 L 705 852 L 738 852" fill="none" stroke="#cf222e" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#arrow-close)"/>
+<rect x="1050" y="720" width="290" height="64" rx="8" fill="#ffffff" stroke="#0969da" stroke-width="1.6"/>
+<text x="1195.0" y="742.0" font-size="15" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">Reader 끝</text>
+<text x="1195.0" y="762.0" font-size="13" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">readLine()에서 SocketException</text>
+<rect x="1050" y="820" width="290" height="64" rx="8" fill="#ffffff" stroke="#0969da" stroke-width="1.6"/>
+<text x="1195.0" y="842.0" font-size="15" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">Writer 끝</text>
+<text x="1195.0" y="862.0" font-size="13" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">take()에서 InterruptedException</text>
+<path d="M 982 752 L 1048 752" fill="none" stroke="#cf222e" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#arrow-close)"/>
+<path d="M 982 852 L 1048 852" fill="none" stroke="#cf222e" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#arrow-close)"/>
+<rect x="740" y="906" width="600" height="40" rx="8" fill="#ffffff" stroke="#d0d7de" stroke-width="1.6"/>
+<text x="1040.0" y="926.0" font-size="12" font-weight="500" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">창이 닫히고 Reader · Writer가 끝나면 남은 스레드가 없어 프로세스 종료</text>
+<text x="60" y="962" font-size="12" font-weight="400" text-anchor="start" dominant-baseline="middle" fill="#57606a">연결 실패는 여기로 오지 않는다. new Client()가 예외 → main이 '서버 연결 실패' 대화상자 → 스레드 시작 전이라 그대로 종료</text>
+<path d="M 60 1030 L 120 1030" fill="none" stroke="#0969da" stroke-width="1.8" marker-end="url(#arrow-recv)"/>
+<text x="134" y="1030" font-size="15" font-weight="500" text-anchor="start" dominant-baseline="middle" fill="#1f2328">수신</text>
+<path d="M 320 1030 L 380 1030" fill="none" stroke="#bf8700" stroke-width="1.8" marker-end="url(#arrow-send)"/>
+<text x="394" y="1030" font-size="15" font-weight="500" text-anchor="start" dominant-baseline="middle" fill="#1f2328">전송</text>
+<path d="M 580 1030 L 640 1030" fill="none" stroke="#8c959f" stroke-width="1.8" marker-end="url(#arrow-make)"/>
+<text x="654" y="1030" font-size="15" font-weight="500" text-anchor="start" dominant-baseline="middle" fill="#1f2328">같은 스레드 안 호출</text>
+<path d="M 840 1030 L 900 1030" fill="none" stroke="#cf222e" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#arrow-close)"/>
+<text x="914" y="1030" font-size="15" font-weight="500" text-anchor="start" dominant-baseline="middle" fill="#1f2328">종료 경로</text>
+<text x="1460" y="1030" font-size="13" font-weight="400" text-anchor="end" dominant-baseline="middle" fill="#57606a">스레드 배치는 overview.svg</text>
+</svg>
