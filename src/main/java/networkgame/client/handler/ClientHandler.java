@@ -1,4 +1,6 @@
-package networkgame.client;
+package networkgame.client.handler;
+
+import networkgame.client.Client;
 
 import java.io.IOException;
 import java.net.Socket;

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import networkgame.protocol.Direction;
+import networkgame.protocol.PlayerInfo;
 
 /**
  * 로비에 그릴 플레이어 상태. EDT에서만 읽고 바꾼다. 네트워크 스레드는 {@code invokeLater}로 넘겨서 바꾼다.
@@ -13,6 +14,17 @@ final class LobbyState {
 
     // playerId → Player. 목록을 들어온 순서대로 돌려주려고 LinkedHashMap을 쓴다.
     private final Map<Integer, Player> players = new LinkedHashMap<>();
+
+    // WELCOME을 받기 전에는 null입니다.
+    private Integer localPlayerId;
+
+    void welcome(int localPlayerId, List<PlayerInfo> playerInfos) {
+        this.localPlayerId = localPlayerId;
+
+        for (PlayerInfo playerInfo : playerInfos) {
+            save(Player.from(playerInfo));
+        }
+    }
 
     /**
      * 플레이어를 새 좌표와 방향으로 옮긴다. 이름과 캐릭터는 그대로 둔다.
@@ -32,6 +44,15 @@ final class LobbyState {
     /** 플레이어 한 명을 목록에서 뺀다. 목록에 없는 {@code playerId}면 아무것도 하지 않는다. */
     void removeByPlayerId(int playerId) {
         players.remove(playerId);
+    }
+
+    /**
+     * 내 플레이어를 찾는다.
+     *
+     * @return 내 플레이어. WELCOME을 받기 전이면 {@code null}
+     */
+    Player findLocalPlayer() {
+        return localPlayerId == null ? null : players.get(localPlayerId);
     }
 
     /**
