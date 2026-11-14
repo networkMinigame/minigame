@@ -1,0 +1,58 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+language: ko-KR
+tone_instructions: >
+  문제의 원인과 수정 방법을 구체적으로 쓰고, 동시성 문제는 문제가 발생하는 실행 순서와
+  관련 Java 공식 문서를 함께 제시하세요.
+
+reviews:
+  profile: chill
+  # 머지 판단은 팀원이 한다.
+  auto_approvals:
+    enabled: false
+  high_level_summary: true
+  high_level_summary_in_walkthrough: false
+  high_level_summary_instructions: |
+    한국어로 짧게 작성하세요. '## 변경 요약' 아래에 '### 아트워크', '### 기능',
+    '### 버그 수정' 등 해당 PR에 맞는 분류를 두고 실제 변경 내용과 효과를 글머리표로 적으세요.
+    파일 목록이나 추상적인 개선 표현, 확인하지 않은 효과는 쓰지 마세요.
+  changed_files_summary: false
+  sequence_diagrams: false
+  assess_linked_issues: true
+  related_issues: false
+  related_prs: false
+  suggested_labels: false
+  auto_apply_labels: false
+  suggested_reviewers: false
+  auto_assign_reviewers: false
+  poem: true
+  path_filters:
+    - "!gradle/wrapper/**"
+    - "!gradlew"
+    - "!gradlew.bat"
+  auto_review:
+    enabled: true
+    # 기존처럼 새 커밋마다 재리뷰하지 않는다. 필요할 때 @coderabbitai review로 요청한다.
+    auto_incremental_review: false
+
+chat:
+  auto_reply: true
+
+knowledge_base:
+  web_search:
+    enabled: true
+  # 두 리뷰 도구가 같은 기준을 읽도록 상세 지침은 AGENTS.md에만 둔다.
+  code_guidelines:
+    enabled: true
+    filePatterns:
+      - AGENTS.md
+      - CONTRIBUTING.md
+      - docs/architecture.md
+      - docs/thread-diagram/**/*.md
+      - docs/minigames.md
+      - docs/libraries.md
+  learnings:
+    scope: local
+  issues:
+    scope: local
+  pull_requests:
+    scope: local
