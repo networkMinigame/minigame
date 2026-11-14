@@ -1,5 +1,8 @@
 package networkgame.server.session;
 
+import networkgame.protocol.MessageCodec;
+import networkgame.protocol.ServerMsg;
+
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -11,9 +14,9 @@ import static networkgame.util.Log.log;
 
 public class WriteHandler extends SessionHandler {
 
-    private final BlockingQueue<String> sendQueue;
+    private final BlockingQueue<ServerMsg> sendQueue;
 
-    public WriteHandler(Session session, Socket socket, BlockingQueue<String> sendQueue) {
+    public WriteHandler(Session session, Socket socket, BlockingQueue<ServerMsg> sendQueue) {
         super(session, socket);
         this.sendQueue = sendQueue;
     }
@@ -23,10 +26,10 @@ public class WriteHandler extends SessionHandler {
         BufferedWriter out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), UTF_8));
 
         while (true) {
-            String outputMessage = sendQueue.take();
+            String outputMessage = MessageCodec.encode(sendQueue.take());
 
             out.write(outputMessage);
-            out.newLine(); // \n
+            out.write('\n');
             out.flush();
             log(outputMessage);
         }

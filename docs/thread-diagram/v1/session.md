@@ -1,15 +1,15 @@
 # v1 확대도: 세션 안쪽
 
-> [전체도](README.md)의 Reader A · Writer A(+ sendQueue)를 펼친 것. 지금 서버 코드(`networkgame.server.session`) 기준.
+> [전체도](README.md)의 서버 Reader·Writer와 큐를 접속 하나 기준으로 펼친 그림이다.
 
 ## 배치
 
 ![세션 안쪽](session.svg)
 
-- 박스: 파랑 = 스레드, 노랑 = 큐, 흰 박스 = 객체 (스레드 아님. 점선 테두리 Session은 Reader·Writer·sendQueue를 가진 객체)
-- 선: 회색 실선 = TCP, 회색 점선 = 메서드 호출, 파랑 = 받는 길, 노랑 = 보내는 길
-- 지금은 GameLoop가 없어서 `console` 스레드가 콘솔에서 읽은 줄을 `broadcast()`로 모든 세션의 sendQueue에 넣는다. `main`은 `accept()`만 반복한다
-- Reader가 받은 줄은 `relay()`가 `이름: 내용`으로 만들어 `broadcast()`한다. 보낸 사람도 돌려받는다. `broadcast()`는 잠금 안에서 모두에게 넣어서, 동시에 보내도 모두가 같은 순서로 받는다
+- 파랑은 Reader·Writer 스레드, 노랑은 큐, 초록은 DispatcherLoop 스레드다. 점선 테두리는 접속 하나를 담당하는 Session 객체다.
+- Reader는 소켓에서 읽은 한 줄을 `ClientMsg`로 변환한다. Session은 자기 `sendQueue` 참조를 메시지와 묶어 서버 공용 `receiveQueue`에 넣는다.
+- DispatcherLoop는 큐에서 요청을 순서대로 꺼낸다. `JOIN`이면 SessionManager에 입장자를 등록하고, 새 입장자의 큐에 `WELCOME`, 기존 입장자의 큐에 `JOINED`를 넣는다.
+- Writer는 자기 세션의 `sendQueue`에서 `ServerMsg`를 꺼내 JSON 한 줄로 만들어 소켓에 쓴다.
 
 ## 닫기
 
@@ -20,32 +20,27 @@ sequenceDiagram
         participant R as Reader
         participant W as Writer
         participant S as Session
+        participant Q as receiveQueue
+        participant L as DispatcherLoop
         participant M as SessionManager
     end
 
-    alt 클라이언트가 나감
-        C-xR: 연결 닫힘
-        Note over R: readLine() = null
-        R-->>S: finally close()
-        Note over S: CAS 통과
-        S-->>M: remove(this)
-        Note over S: socket.close()
-        S-->>W: interrupt()
-        Note over W: take()에서 InterruptedException
-        W-->>S: finally close()
-        Note over S: CAS 실패 → 바로 return
-    else 서버가 전부 닫음 (closeAll)
-        M-->>S: close()
-        Note over S: CAS 통과, remove(this), socket.close()
-        S-xC: 연결 닫힘
-        S-->>W: interrupt()
-        Note over R: readLine()이 SocketException으로 깨어남
-        R-->>S: finally close()
-        W-->>S: finally close()
-        Note over S: 둘 다 CAS 실패 → 바로 return
+    alt 클라이언트가 연결을 닫음
+        C-xR: readLine()이 null 반환
+        R->>Q: Leave(sendQueue) 넣기
+        R->>S: close()
+        S->>W: 소켓 닫기 및 interrupt()
+        W->>S: close() 재호출
+    else Writer 전송 실패
+        W->>S: close()
+        S-xR: 소켓이 닫혀 읽기 종료
+        R->>Q: Leave(sendQueue) 넣기
+        R->>S: close() 재호출
     end
+
+    Q-->>L: 다음 처리 시 Leave 꺼내기
+    L->>M: 해당 sendQueue의 입장자 제거
 ```
 
-- 점선 = 메서드 호출. `close()`는 부른 스레드에서 실행된다
-- Writer가 보내다 실패해도 순서는 같다. Writer가 먼저 `close()`를 부르고, 소켓이 닫히면서 Reader가 깨어나 두 번째 `close()`를 부른다
-- 깨우는 방법이 다르다: `readLine()`·`write()`는 소켓을 닫으면 깨어나지만, `sendQueue.take()`는 `interrupt()`로만 깨어난다
+- Reader는 마지막 메시지 뒤에 `LEAVE`를 넣는다. DispatcherLoop가 이를 꺼내 로비 목록을 갱신한다. 로비 목록 갱신과 소켓 정리는 각각 진행된다.
+- Reader와 Writer가 모두 `close()`를 호출할 수 있다. 먼저 호출한 쪽이 CAS를 통과하면 소켓을 닫고 Writer를 깨운다. `sendQueue.take()`에서 기다리는 Writer는 `interrupt()`로 깨어난다.

@@ -1,5 +1,8 @@
 package networkgame.server.session;
 
+import networkgame.protocol.MessageCodec;
+import tools.jackson.core.JacksonException;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -16,17 +19,23 @@ public class ReadHandler extends SessionHandler {
 
     @Override
     protected void handle() throws IOException {
-        BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream(), UTF_8));
-
-        String inputMessage;
-        while ((inputMessage = in.readLine()) != null) {
-            if (inputMessage.isBlank()) {
-                continue;
+        try {
+            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream(), UTF_8));
+            String line;
+            while ((line = in.readLine()) != null) {
+                if (line.isBlank()) {
+                    continue;
+                }
+                try {
+                    session.receive(MessageCodec.decodeClient(line));
+                } catch (JacksonException e) {
+                    log("잘못된 클라이언트 메시지 " + e.getOriginalMessage());
+                }
             }
-            log(inputMessage);
-            session.relay(inputMessage);
+            log("클라이언트가 연결을 닫음");
+        } finally {
+            // 같은 Reader가 마지막 메시지 뒤에 LEAVE를 넣어 순서를 보장한다.
+            session.readerFinished();
         }
-
-        log("클라이언트가 연결을 닫음");
     }
 }

@@ -11,7 +11,7 @@ import tools.jackson.databind.json.JsonMapper;
  */
 public final class MessageCodec {
 
-    // Jackson 3의 JsonMapper는 만든 뒤 설정이 바뀌지 않아서 Reader·Writer·GameLoop 스레드가 하나를 같이 써도 된다.
+    // Jackson 3의 JsonMapper는 만든 뒤 설정이 바뀌지 않아서 Reader·Writer·DispatcherLoop 스레드가 하나를 같이 써도 된다.
     // 기본 설정은 잘못 만든 메시지를 조용히 받아 준다. 아래 설정으로 그런 줄을 받을 때 예외가 나게 한다.
     private static final JsonMapper MAPPER = JsonMapper.builder()
             // 필드가 빠진 줄. 기본값이면 {"type":"JOIN","name":"Kim"}이 character=0으로 들어온다.
