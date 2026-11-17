@@ -27,8 +27,8 @@ d.node(530, 330, 160, 56, "queue", ["sendQueue", "ServerMsg"])
 d.line(340, 96, 340, 472)
 
 # 서버 공용 큐와 요청 처리 루프
-d.node(765, 178, 200, 80, "queue", ["receiveQueue", "Received(sendQueue, msg)", "Leave(sendQueue)"])
-d.node(765, 317, 200, 82, "loop", ["DispatcherLoop", "JOIN · LEAVE 처리", "SessionManager로 목록 관리"])
+d.node(765, 178, 200, 80, "queue", ["receiveQueue", "Received(connectionId, msg)", "Leave(connectionId)"])
+d.node(765, 317, 200, 82, "loop", ["DispatcherLoop", "JOIN · LEAVE 처리", "PlayerManager로 목록 관리"])
 
 d.arrow([(220, 218), (288, 218)], "tcp", "TCP", (254, 218))
 d.arrow([(290, 358), (222, 358)], "tcp", "TCP", (256, 358))
@@ -37,6 +37,7 @@ d.text(623, 201, "수신 메시지 · 연결 종료", size=12, weight=400, color
 d.arrow([(865, 258), (865, 315)], "loop")
 d.text(881, 285, "poll()", size=12, weight=400, color="#57606a", anchor="start")
 d.arrow([(765, 358), (692, 358)], "send")
+d.text(775, 420, "SessionManager를 통해 응답 전달", size=12, weight=400, color="#57606a")
 d.arrow([(530, 358), (492, 358)], "send")
 d.text(510, 312, "take()", size=11, weight=400, color="#57606a")
 

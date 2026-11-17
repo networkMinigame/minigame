@@ -24,12 +24,12 @@
 <line x1="340" y1="96" x2="340" y2="472" stroke="#8c959f" stroke-width="1.6"/>
 <rect x="765" y="178" width="200" height="80" rx="8" fill="#fff8c5" stroke="#bf8700" stroke-width="1.6"/>
 <text x="865.0" y="198.0" font-size="15" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">receiveQueue</text>
-<text x="865.0" y="218.0" font-size="13" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">Received(sendQueue, msg)</text>
-<text x="865.0" y="238.0" font-size="13" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">Leave(sendQueue)</text>
+<text x="865.0" y="218.0" font-size="13" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">Received(connectionId, msg)</text>
+<text x="865.0" y="238.0" font-size="13" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">Leave(connectionId)</text>
 <rect x="765" y="317" width="200" height="82" rx="8" fill="#dafbe1" stroke="#1a7f37" stroke-width="1.6"/>
 <text x="865.0" y="338.0" font-size="15" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">DispatcherLoop</text>
 <text x="865.0" y="358.0" font-size="13" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">JOIN · LEAVE 처리</text>
-<text x="865.0" y="378.0" font-size="13" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">SessionManager로 목록 관리</text>
+<text x="865.0" y="378.0" font-size="13" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">PlayerManager로 목록 관리</text>
 <path d="M 220 218 L 288 218" fill="none" stroke="#57606a" stroke-width="1.8" marker-end="url(#arrow-tcp)"/>
 <rect x="236" y="208" width="36" height="18" rx="4" fill="#ffffff"/>
 <text x="254" y="218" font-size="11" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#57606a">TCP</text>
@@ -41,6 +41,7 @@
 <path d="M 865 258 L 865 315" fill="none" stroke="#1a7f37" stroke-width="1.8" marker-end="url(#arrow-loop)"/>
 <text x="881" y="285" font-size="12" font-weight="400" text-anchor="start" dominant-baseline="middle" fill="#57606a">poll()</text>
 <path d="M 765 358 L 692 358" fill="none" stroke="#bf8700" stroke-width="1.8" marker-end="url(#arrow-send)"/>
+<text x="775" y="420" font-size="12" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">SessionManager를 통해 응답 전달</text>
 <path d="M 530 358 L 492 358" fill="none" stroke="#bf8700" stroke-width="1.8" marker-end="url(#arrow-send)"/>
 <text x="510" y="312" font-size="11" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">take()</text>
 </svg>

@@ -12,21 +12,44 @@ public final class DispatcherLoop implements Runnable {
     private static final long TICK_MILLIS = 33;
 
     private sealed interface Event {
-        record Received(BlockingQueue<ServerMsg> sendQueue, ClientMsg message) implements Event {}
-        record Leave(BlockingQueue<ServerMsg> sendQueue) implements Event {}
+        record Received(long connectionId, ClientMsg message) implements Event {}
+        record Leave(long connectionId) implements Event {}
     }
 
     private final BlockingQueue<Event> receiveQueue = new LinkedBlockingQueue<>();
-    private final SessionManager sessions = new SessionManager();
+    private final PlayerManager playerManager = new PlayerManager();
+    private final SessionManager sessions;
 
-    public void receive(BlockingQueue<ServerMsg> sendQueue, ClientMsg message) {
-        receiveQueue.add(new Event.Received(sendQueue, message));
+    /** 서버와 연결 목록을 공유하는 요청 처리 루프를 구성한다. */
+    DispatcherLoop(SessionManager sessions) {
+        this.sessions = sessions;
     }
 
-    public void leave(BlockingQueue<ServerMsg> sendQueue) {
-        receiveQueue.add(new Event.Leave(sendQueue));
+    /**
+     * Reader가 읽은 메시지를 발신 세션의 연결 식별자와 함께 등록한다.
+     * 여러 Reader에서 호출할 수 있으며, 메시지는 DispatcherLoop 스레드에서 처리한다.
+     *
+     * @param connectionId 발신 TCP 연결의 식별자
+     * @param message Reader가 변환에 성공한 클라이언트 메시지
+     */
+    public void receive(long connectionId, ClientMsg message) {
+        receiveQueue.add(new Event.Received(connectionId, message));
     }
 
+    /**
+     * 연결이 끝난 세션의 퇴장 이벤트를 등록한다.
+     * 해당 세션의 Reader가 마지막 메시지를 등록한 뒤 호출한다.
+     *
+     * @param connectionId 종료된 TCP 연결의 식별자
+     */
+    public void leave(long connectionId) {
+        receiveQueue.add(new Event.Leave(connectionId));
+    }
+
+    /**
+     * 요청을 처리한 뒤 33ms를 기다리는 작업을 인터럽트될 때까지 반복한다.
+     * DispatcherLoop 인스턴스당 하나의 스레드에서 실행한다.
+     */
     @Override
     public void run() {
         try {
@@ -44,15 +67,19 @@ public final class DispatcherLoop implements Runnable {
         Event event;
         while ((event = receiveQueue.poll()) != null) {
             switch (event) {
-                case Event.Received(var sendQueue, var message) -> handle(sendQueue, message);
-                case Event.Leave(var sendQueue) -> sessions.remove(sendQueue);
+                case Event.Received(var connectionId, var message) -> handle(connectionId, message);
+                case Event.Leave(var connectionId) -> {
+                    playerManager.remove(connectionId);
+                    sessions.remove(connectionId);
+                }
             }
         }
     }
 
-    private void handle(BlockingQueue<ServerMsg> sendQueue, ClientMsg message) {
+    /** 현재 지원하는 입장 메시지를 처리한다. 다른 메시지는 후속 기능에서 처리한다. */
+    private void handle(long connectionId, ClientMsg message) {
         switch (message) {
-            case ClientMsg.Join join -> join(sendQueue, join);
+            case ClientMsg.Join join -> join(connectionId, join);
             case ClientMsg.Move ignored -> {}
             case ClientMsg.Ready ignored -> {}
             case ClientMsg.Chat ignored -> {}
@@ -60,17 +87,18 @@ public final class DispatcherLoop implements Runnable {
         }
     }
 
-    private void join(BlockingQueue<ServerMsg> sendQueue, ClientMsg.Join message) {
-        PlayerInfo player = sessions.register(sendQueue, message.name(), message.character());
+    /** 입장에 성공하면 본인에게 전체 목록을 보내고 기존 입장자에게 새 플레이어를 알린다. */
+    private void join(long connectionId, ClientMsg.Join message) {
+        PlayerInfo player = playerManager.register(connectionId, message.name(), message.character());
         if (player == null) {
             return;
         }
 
-        sendQueue.add(new ServerMsg.Welcome(player.id(), sessions.players()));
+        sessions.send(connectionId, new ServerMsg.Welcome(player.id(), playerManager.players()));
         var joined = new ServerMsg.Joined(player);
-        for (var recipient : sessions.sendQueues()) {
-            if (recipient != sendQueue) {
-                recipient.add(joined);
+        for (long recipient : playerManager.connectionIds()) {
+            if (recipient != connectionId) {
+                sessions.send(recipient, joined);
             }
         }
     }

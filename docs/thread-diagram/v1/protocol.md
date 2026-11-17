@@ -20,7 +20,7 @@ sequenceDiagram
     participant B as Client B (id=0)
 
     A->>RA: JOIN name=Kim
-    RA-->>GL: receiveQueue (A의 sendQueue, JOIN)
+    RA-->>GL: receiveQueue (A의 연결 ID, JOIN)
     Note over GL: id=1 부여, 세션 목록에 추가
     GL-->>SQ: A sendQueue에 WELCOME, B sendQueue에 JOINED
     SQ->>A: WELCOME id=1, players
@@ -61,7 +61,7 @@ sequenceDiagram
     alt 정상 종료 (창 닫기, Ctrl+C)
         A-xRA: 연결 닫힘
         Note over RA: readLine() = null
-        RA-->>GL: receiveQueue LEAVE (A의 sendQueue)
+        RA-->>GL: receiveQueue LEAVE (A의 연결 ID)
         Note over GL: 세션 목록에서 1 제거
         GL-->>SQ: B sendQueue에 LEFT, A sendQueue에 종료 신호
         SQ->>B: LEFT id=1
@@ -72,7 +72,7 @@ sequenceDiagram
         GL-->>SQ: B sendQueue에 LEFT
         SQ->>B: LEFT id=1
         Note over RA: 소켓이 닫혀 예외로 깨어남
-        RA-->>GL: receiveQueue LEAVE (A의 sendQueue)
+        RA-->>GL: receiveQueue LEAVE (A의 연결 ID)
         Note over GL: 이미 목록에 없음 → 무시
     end
 ```
@@ -104,7 +104,7 @@ sequenceDiagram
 | | `MOVED` | id, x, y, direction |
 | | `READY_STATE` | readyIds (준비한 playerId 목록) |
 | | `START` | 없음 |
-| 서버 내부 (`receiveQueue`만) | `LEAVE` | 해당 세션의 sendQueue 참조 |
+| 서버 내부 (`receiveQueue`만) | `LEAVE` | 해당 세션의 연결 ID |
 
 - 클라이언트 메시지에는 보낸 사람을 넣지 않는다. 서버 Reader가 받은 소켓으로 붙인다 (`CHAT`의 from도 서버가 채움)
 - 깨진 JSON, 줄 전체가 `null`인 경우, 모르는 `type`, 빠졌거나 null이거나 남는 필드는 변환할 때 예외가 난다. 받는 쪽은 그 줄만 버리고 로그를 남긴다

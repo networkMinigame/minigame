@@ -30,9 +30,9 @@
 
 | 스레드 | 개수 | 하는 일 | 만질 수 있는 것 |
 |---|---|---|---|
-| **Acceptor** | 1 | `accept()` → 받은 소켓에 TCP_NODELAY 설정 → Reader·Writer와 sendQueue 생성 | 서버 소켓 |
-| **Reader X** | 접속당 1 | 한 줄 읽기 → 파싱 → 세션의 sendQueue 참조와 ClientMsg를 receiveQueue에 추가. 연결 종료 시 LEAVE 추가 | 자기 소켓 입력, receiveQueue (넣기만) |
-| **DispatcherLoop** | 1 | receiveQueue 비우기 → JOIN·LEAVE 처리 → 응답을 각 sendQueue에 추가. 한 번 처리한 뒤 33ms 대기 | **SessionManager의 입장자 목록** |
+| **Acceptor** | 1 | `accept()` → 받은 소켓에 TCP_NODELAY 설정 → 세션을 SessionManager에 등록 후 Reader·Writer 시작 | 서버 소켓 |
+| **Reader X** | 접속당 1 | 한 줄 읽기 → 파싱 → 연결 ID와 ClientMsg를 receiveQueue에 추가. 연결 종료 시 LEAVE 추가 | 자기 소켓 입력, receiveQueue (넣기만) |
+| **DispatcherLoop** | 1 | receiveQueue 비우기 → JOIN·LEAVE 처리 → SessionManager를 통해 응답 전달. 한 번 처리한 뒤 33ms 대기 | **PlayerManager의 입장자 목록** |
 | **Writer X** | 접속당 1 | 자기 sendQueue에서 `take()` → 소켓에 쓰기 | 자기 소켓 출력 |
 
 ### 클라이언트
@@ -48,5 +48,5 @@
 ## 지켜야 할 것
 
 - **소켓에 쓰는 건 Writer뿐.** 다른 스레드가 쓰면 두 메시지가 한 줄에 섞임. 클라이언트 Reader가 PONG을 보낼 때도 sendQueue를 거침
-- **입장자 목록을 바꾸는 건 DispatcherLoop뿐이다.** SessionManager는 이 스레드에서 호출한다.
+- **입장자 목록을 바꾸는 건 DispatcherLoop뿐이다.** PlayerManager는 이 스레드에서 호출한다.
 - **느린 클라이언트는 자기 Writer만 막힘.** sendQueue가 사이에 있어서 DispatcherLoop와 다른 사람 Writer는 계속 돎
