@@ -16,8 +16,28 @@ class DispatcherLoopTest {
     private final DispatcherLoop dispatcherLoop = new DispatcherLoop(sessions);
 
     @Test
-    @DisplayName("새 참가자는 본인을 포함한 입장자 목록을 WELCOME으로 받는다")
-    void sendsWelcomeWithCurrentPlayers() {
+    @DisplayName("첫 참가자는 자기 정보만 담긴 WELCOME을 받는다")
+    void sendsWelcomeToFirstPlayer() {
+        // given
+        var first = connect(100);
+
+        // when
+        join(100, "모카", 2);
+
+        // then
+        assertThat(first).singleElement().isInstanceOfSatisfying(ServerMsg.Welcome.class, welcome -> {
+            assertThat(welcome.id()).isZero();
+            assertThat(welcome.players()).singleElement().satisfies(player -> {
+                assertThat(player.id()).isEqualTo(welcome.id());
+                assertThat(player.name()).isEqualTo("모카");
+                assertThat(player.character()).isEqualTo(2);
+            });
+        });
+    }
+
+    @Test
+    @DisplayName("두 번째 참가자는 두 명의 입장자 목록을 WELCOME으로 받는다")
+    void sendsWelcomeToSecondPlayer() {
         // given
         connect(0);
         join(0, "모카", 0);
