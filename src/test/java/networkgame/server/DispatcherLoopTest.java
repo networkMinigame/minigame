@@ -3,6 +3,8 @@ package networkgame.server;
 import networkgame.protocol.ClientMsg;
 import networkgame.protocol.PlayerInfo;
 import networkgame.protocol.ServerMsg;
+import networkgame.server.session.Session;
+import java.net.Socket;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -131,7 +133,7 @@ class DispatcherLoopTest {
 
     private List<ServerMsg> connect(long connectionId) {
         List<ServerMsg> responses = new ArrayList<>();
-        sessions.register(connectionId, new Connection() {
+        sessions.register(connectionId, new Session(new Socket(), 0L, new DispatcherLoop(sessions)) {
             @Override
             public void send(ServerMsg message) {
                 responses.add(message);

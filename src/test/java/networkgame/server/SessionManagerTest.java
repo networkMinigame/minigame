@@ -1,6 +1,8 @@
 package networkgame.server;
 
 import networkgame.protocol.ServerMsg;
+import networkgame.server.session.Session;
+import java.net.Socket;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
@@ -14,14 +16,14 @@ class SessionManagerTest {
         // given
         SessionManager sessions = new SessionManager();
         List<Long> attempted = new ArrayList<>();
-        sessions.register(0, new Connection() {
+        sessions.register(0, new Session(new Socket(), 0L, new DispatcherLoop(sessions)) {
             public void send(ServerMsg message) {}
             public void close() {
                 attempted.add(0L);
                 throw new IllegalStateException("종료 실패 테스트");
             }
         });
-        sessions.register(1, new Connection() {
+        sessions.register(1, new Session(new Socket(), 0L, new DispatcherLoop(sessions)) {
             public void send(ServerMsg message) {}
             public void close() {
                 attempted.add(1L);
@@ -36,30 +38,4 @@ class SessionManagerTest {
         assertThat(attempted).containsExactlyInAnyOrder(0L, 1L);
     }
 
-    @Test
-    @DisplayName("모든 연결에 같은 서버 종료 마감 시각을 전달한다")
-    void sharesDeadlineBetweenConnections() throws InterruptedException {
-        // given
-        SessionManager sessions = new SessionManager();
-        List<Long> deadlines = new ArrayList<>();
-        for (long id = 0; id < 2; id++) {
-            sessions.register(id, new Connection() {
-                public void send(ServerMsg message) {}
-                public void close() {}
-                public boolean awaitTermination(long deadline) {
-                    deadlines.add(deadline);
-                    return true;
-                }
-            });
-        }
-        sessions.closeAll();
-        long deadline = System.nanoTime() + 3_000_000_000L;
-
-        // when
-        boolean success = sessions.awaitTermination(deadline);
-
-        // then
-        assertThat(success).isTrue();
-        assertThat(deadlines).containsExactly(deadline, deadline);
-    }
 }

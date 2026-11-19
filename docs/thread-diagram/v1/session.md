@@ -54,9 +54,9 @@ Server는 같은 잠금으로 수신 소켓·세션 등록과 종료 상태 전�
 종료 시작은 CAS로 한 번만 승인하며, 종료 중 수락한 연결은 등록 전에 닫는다.
 
 1. 리스너를 닫아 accept() 대기를 해제한다.
-2. SessionManager.closeAll()에 연결 전체 종료를 맡긴다. 내부에서 연결 복사본을 순회하며 각 연결의 close()를 호출한다. JOIN 전 연결과 퇴장 후 작업 스레드가 종료 중인 연결도 포함한다.
+2. SessionManager.closeAll()에 연결 전체 종료를 맡긴다. 내부에서 연결 복사본을 순회하며 각 연결의 close()를 호출한다. JOIN 전 연결도 포함한다.
 3. DispatcherLoop에 interrupt를 보낸다.
-4. 잠금을 놓은 상태에서 SessionManager.awaitTermination()으로 Reader·Writer를 기다린 뒤 DispatcherLoop를 공통 마감 시각까지 join한다. 전체 대기 예산은 3초다.
+4. 잠금을 놓은 상태에서 DispatcherLoop를 공통 마감 시각까지 join한다. 루프 및 중복 종료 호출의 대기 예산은 3초다. 세션의 소켓 정리와 Writer 인터럽트 요청 후 각 Handler는 자신의 finally 경로로 종료한다.
 
 각 자원의 정리 실패를 따로 기록하고 다음 자원의 정리를 시도한다.
 중복 close() 호출은 같은 종료 작업의 완료를 공통 마감까지 기다린다.
@@ -79,10 +79,6 @@ sequenceDiagram
         Session->>Session: 소켓 닫기 / Writer interrupt
     end
     Server->>Loop: interrupt()
-    Server->>Manager: awaitTermination(공통 마감)
-    loop 모든 연결
-        Manager->>Session: 공통 마감까지 Reader / Writer join
-    end
     Server->>Loop: 남은 시간으로 join
     Server-->>Caller: 종료 결과 기록 / 완료 알림
 ```

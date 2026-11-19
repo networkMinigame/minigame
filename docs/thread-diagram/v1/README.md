@@ -52,4 +52,4 @@
 - **느린 클라이언트는 자기 Writer만 막힘.** sendQueue가 사이에 있어서 DispatcherLoop와 다른 사람 Writer는 계속 돎
 
 
-SessionManager는 연결 ID별 Connection을 보관한다. Session이 이 계약을 구현해 응답을 큐에 넣고 소켓 종료와 스레드 종료 대기를 제공한다. 서버 전체 종료 순서는 [세션 종료 설명](session.md#서버-전체-종료)을 따른다.
+SessionManager는 연결 ID별 Session을 직접 보관한다. Session은 응답을 큐에 넣고 소켓과 작업 스레드를 정리한다. 서버 전체 종료 순서는 [세션 종료 설명](session.md#서버-전체-종료)을 따른다.

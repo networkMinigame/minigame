@@ -108,7 +108,7 @@ public class Server implements AutoCloseable {
     /**
      * 리스너와 모든 연결을 닫고 요청 루프를 중단한다.
      * 종료는 한 번 시작하며 중복 호출도 같은 종료 작업을 최대 공통 3초 마감까지 기다린다.
-     * 소켓 정리와 인터럽트를 먼저 요청하고, 잠금 밖에서 스레드 종료를 기다린다.
+     * 소켓 정리와 인터럽트를 먼저 요청하고, 잠금 밖에서 DispatcherLoop 종료를 기다린다.
      */
     @Override
     public void close() {
@@ -149,7 +149,6 @@ public class Server implements AutoCloseable {
                 loop.interrupt();
             }
             try {
-                success = sessions.awaitTermination(deadline) && success;
                 if (loop != null && loop != Thread.currentThread()) {
                     long remaining = deadline - System.nanoTime();
                     if (remaining > 0) {

@@ -7,7 +7,6 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicReference;
 import networkgame.server.session.Session;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -18,11 +17,9 @@ class ServerTest {
     void closesConnectionBeforeJoin() throws Exception {
         // given
         CountDownLatch registered = new CountDownLatch(1);
-        AtomicReference<Session> session = new AtomicReference<>();
         Server server = new Server(0) {
             @Override
             void registered(Session connection) {
-                session.set(connection);
                 registered.countDown();
             }
         };
@@ -38,7 +35,6 @@ class ServerTest {
                 // then
                 assertThat(client.getInputStream().read()).isEqualTo(-1);
                 running.get(3, TimeUnit.SECONDS);
-                assertThat(session.get().isTerminated()).isTrue();
             } finally {
                 server.close();
             }
