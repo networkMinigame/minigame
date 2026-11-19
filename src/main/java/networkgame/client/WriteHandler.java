@@ -1,8 +1,7 @@
 package networkgame.client;
 
-import java.io.BufferedWriter;
+import java.io.BufferedOutputStream;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.util.concurrent.BlockingQueue;
 
@@ -20,13 +19,13 @@ public class WriteHandler extends ClientHandler {
 
     @Override
     protected void handle() throws IOException, InterruptedException {
-        BufferedWriter out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), UTF_8));
+        BufferedOutputStream out = new BufferedOutputStream(socket.getOutputStream());
 
         while (true) {
             String outputMessage = sendQueue.take();
 
-            out.write(outputMessage);
-            out.newLine(); // \n
+            out.write(outputMessage.getBytes(UTF_8));
+            out.write('\n');
             out.flush();
             log(outputMessage);
         }
