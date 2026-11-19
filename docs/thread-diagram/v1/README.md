@@ -31,7 +31,7 @@
 | 스레드 | 개수 | 하는 일 | 만질 수 있는 것 |
 |---|---|---|---|
 | **Acceptor** | 1 | `accept()` → 받은 소켓에 TCP_NODELAY 설정 → 세션을 SessionManager에 등록 후 Reader·Writer 시작 | 서버 소켓 |
-| **Reader X** | 접속당 1 | 한 줄 읽기 → 파싱 → 연결 ID와 ClientMsg를 receiveQueue에 추가. 연결 종료 시 LEAVE 추가 | 자기 소켓 입력, receiveQueue (넣기만) |
+| **Reader X** | 접속당 1 | 한 줄 읽기 → 파싱 → 세션 ID와 ClientMsg를 receiveQueue에 추가. 연결 종료 시 LEAVE 추가 | 자기 소켓 입력, receiveQueue (넣기만) |
 | **DispatcherLoop** | 1 | receiveQueue 비우기 → JOIN·LEAVE 처리 → SessionManager를 통해 응답 전달. 한 번 처리한 뒤 33ms 대기 | **PlayerManager의 입장자 목록** |
 | **Writer X** | 접속당 1 | 자기 sendQueue에서 `take()` → 소켓에 쓰기 | 자기 소켓 출력 |
 
@@ -52,4 +52,4 @@
 - **느린 클라이언트는 자기 Writer만 막힘.** sendQueue가 사이에 있어서 DispatcherLoop와 다른 사람 Writer는 계속 돎
 
 
-SessionManager는 연결 ID별 Session을 직접 보관한다. Session은 응답을 큐에 넣고 소켓과 작업 스레드를 정리한다. 서버 전체 종료 순서는 [세션 종료 설명](session.md#서버-전체-종료)을 따른다.
+SessionManager는 세션 ID별 Session을 직접 보관한다. Session은 응답을 큐에 넣고 소켓과 작업 스레드를 정리한다. 서버 전체 종료 순서는 [세션 종료 설명](session.md#서버-전체-종료)을 따른다.

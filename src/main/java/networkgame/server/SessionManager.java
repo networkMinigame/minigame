@@ -8,22 +8,22 @@ import java.util.concurrent.ConcurrentHashMap;
 import static networkgame.util.Log.log;
 
 /** JOIN 전 연결까지 추적하며 응답 전달과 전체 종료를 담당한다. */
-final class SessionManager {
+public final class SessionManager {
     private final ConcurrentHashMap<Long, Session> sessions = new ConcurrentHashMap<>();
 
     /** Acceptor가 Reader 시작 전에 세션을 등록한다. */
-    void register(long connectionId, Session session) {
-        sessions.put(connectionId, session);
+    public void register(long sessionId, Session session) {
+        sessions.put(sessionId, session);
     }
 
     /** 종료된 연결을 전송 대상에서 제거한다. */
-    void remove(long connectionId) {
-        sessions.remove(connectionId);
+    void remove(long sessionId) {
+        sessions.remove(sessionId);
     }
 
     /** 등록된 세션의 전송 큐에 응답을 넣는다. */
-    void send(long connectionId, ServerMsg message) {
-        Session session = sessions.get(connectionId);
+    void send(long sessionId, ServerMsg message) {
+        Session session = sessions.get(sessionId);
         if (session != null) {
             session.send(message);
         }

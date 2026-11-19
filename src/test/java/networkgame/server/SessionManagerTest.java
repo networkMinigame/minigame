@@ -16,14 +16,14 @@ class SessionManagerTest {
         // given
         SessionManager sessions = new SessionManager();
         List<Long> attempted = new ArrayList<>();
-        sessions.register(0, new Session(new Socket(), 0L, new DispatcherLoop(sessions)) {
+        sessions.register(0, new Session(new Socket(), 0L, sessions, new DispatcherLoop(sessions)) {
             public void send(ServerMsg message) {}
             public void close() {
                 attempted.add(0L);
                 throw new IllegalStateException("종료 실패 테스트");
             }
         });
-        sessions.register(1, new Session(new Socket(), 0L, new DispatcherLoop(sessions)) {
+        sessions.register(1, new Session(new Socket(), 0L, sessions, new DispatcherLoop(sessions)) {
             public void send(ServerMsg message) {}
             public void close() {
                 attempted.add(1L);

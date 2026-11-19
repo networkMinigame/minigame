@@ -27,7 +27,7 @@ d.node(530, 330, 160, 56, "queue", ["sendQueue", "ServerMsg"])
 d.line(340, 96, 340, 472)
 
 # 서버 공용 큐와 요청 처리 루프
-d.node(765, 178, 200, 80, "queue", ["receiveQueue", "Received(connectionId, msg)", "Leave(connectionId)"])
+d.node(765, 178, 200, 80, "queue", ["receiveQueue", "Received(sessionId, msg)", "Leave(sessionId)"])
 d.node(765, 317, 200, 82, "loop", ["DispatcherLoop", "JOIN · LEAVE 처리", "PlayerManager로 목록 관리"])
 
 d.arrow([(220, 218), (288, 218)], "tcp", "TCP", (254, 218))

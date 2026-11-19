@@ -12,18 +12,16 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static networkgame.util.Log.log;
 
 /** TCP 연결을 받고 서버 전체의 시작과 종료를 관리한다. */
-public class Server implements AutoCloseable {
+public class Server {
     private static final long SHUTDOWN_NANOS = Duration.ofSeconds(3).toNanos();
     private final int port;
     private final Object lifecycle = new Object();
     private final SessionManager sessions = new SessionManager();
     private final AtomicBoolean closing = new AtomicBoolean();
     private final CountDownLatch listening = new CountDownLatch(1);
-    private final CountDownLatch closed = new CountDownLatch(1);
     private ServerSocket listener;
     private Thread loopThread;
-    private long shutdownDeadline;
-    private long nextConnectionId;
+    private long nextSessionId;
     private boolean started;
 
     /** 수신 포트를 지정한다. 0이면 운영체제가 빈 포트를 배정한다. */
@@ -35,8 +33,8 @@ public class Server implements AutoCloseable {
      * @throws IOException 수신 소켓을 열거나 접속을 받는 중 오류가 발생한 경우
      */
     public void start() throws IOException {
+        DispatcherLoop dispatcher;
         try {
-            DispatcherLoop dispatcher = new DispatcherLoop(sessions);
             synchronized (lifecycle) {
                 if (closing.get()) {
                     listening.countDown();
@@ -47,6 +45,7 @@ public class Server implements AutoCloseable {
                 }
                 started = true;
                 listener = new ServerSocket(port);
+                dispatcher = new DispatcherLoop(sessions);
                 loopThread = Thread.ofPlatform().name("dispatcher-loop").start(dispatcher);
                 listening.countDown();
             }
@@ -68,8 +67,7 @@ public class Server implements AutoCloseable {
                     }
                     try {
                         socket.setTcpNoDelay(true);
-                        Session session = new Session(socket, nextConnectionId, dispatcher);
-                        sessions.register(nextConnectionId++, session);
+                        Session session = new Session(socket, nextSessionId++, sessions, dispatcher);
                         session.start();
                         registered(session);
                     } catch (IOException | RuntimeException e) {
@@ -106,67 +104,65 @@ public class Server implements AutoCloseable {
     }
 
     /**
-     * 리스너와 모든 연결을 닫고 요청 루프를 중단한다.
-     * 종료는 한 번 시작하며 중복 호출도 같은 종료 작업을 최대 공통 3초 마감까지 기다린다.
-     * 소켓 정리와 인터럽트를 먼저 요청하고, 잠금 밖에서 DispatcherLoop 종료를 기다린다.
+     * 종료 시작을 한 번 승인하고 리스너, 모든 세션, 요청 루프를 순서대로 정리한다.
+     * 자원별 실패를 기록하며 나머지 자원의 종료 요청을 계속한다.
+     * DispatcherLoop 종료는 잠금 밖에서 최대 3초 기다린다.
      */
-    @Override
     public void close() {
-        Thread loop;
-        boolean owner;
-        long deadline;
-        synchronized (lifecycle) {
-            owner = closing.compareAndSet(false, true);
-            if (owner) {
-                shutdownDeadline = System.nanoTime() + SHUTDOWN_NANOS;
-            }
-            deadline = shutdownDeadline;
-            loop = loopThread;
-        }
-        if (!owner) {
-            try {
-                if (!closed.await(Math.max(0, deadline - System.nanoTime()), TimeUnit.NANOSECONDS)) {
-                    log("서버 종료 완료 대기 시간 초과");
-                }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
+        if (!closing.compareAndSet(false, true)) {
             return;
+        }
+
+        long deadline = System.nanoTime() + SHUTDOWN_NANOS;
+        ServerSocket serverSocket;
+        Thread loop;
+        synchronized (lifecycle) {
+            serverSocket = listener;
+            loop = loopThread;
         }
 
         boolean success = true;
         try {
             try {
-                if (listener != null) {
-                    listener.close();
+                if (serverSocket != null) {
+                    serverSocket.close();
                 }
             } catch (IOException | RuntimeException e) {
                 success = false;
                 log("리스너 종료 실패 " + e.getMessage());
             }
-            success = sessions.closeAll() && success;
-            if (loop != null) {
-                loop.interrupt();
-            }
+
             try {
-                if (loop != null && loop != Thread.currentThread()) {
-                    long remaining = deadline - System.nanoTime();
-                    if (remaining > 0) {
-                        loop.join(Duration.ofNanos(remaining));
-                    }
-                    if (loop.isAlive()) {
-                        success = false;
-                        log("DispatcherLoop 종료 시간 초과");
+                success = sessions.closeAll() && success;
+            } catch (RuntimeException e) {
+                success = false;
+                log("세션 전체 종료 실패 " + e.getMessage());
+            }
+
+            try {
+                if (loop != null) {
+                    loop.interrupt();
+                    if (loop != Thread.currentThread()) {
+                        long remaining = deadline - System.nanoTime();
+                        if (remaining > 0) {
+                            loop.join(Duration.ofNanos(remaining));
+                        }
+                        if (loop.isAlive()) {
+                            success = false;
+                            log("DispatcherLoop 종료 시간 초과");
+                        }
                     }
                 }
             } catch (InterruptedException e) {
                 success = false;
                 Thread.currentThread().interrupt();
+            } catch (RuntimeException e) {
+                success = false;
+                log("DispatcherLoop 종료 실패 " + e.getMessage());
             }
         } finally {
             listening.countDown();
-            log(success ? "서버 종료 완료" : "서버 종료 중 실패 또는 시간 초과");
-            closed.countDown();
+            log(success ? "서버 종료 요청 처리 완료" : "서버 종료 중 실패 또는 시간 초과");
         }
     }
 }

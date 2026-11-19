@@ -131,9 +131,9 @@ class DispatcherLoopTest {
                 welcome -> assertThat(welcome.id()).isZero());
     }
 
-    private List<ServerMsg> connect(long connectionId) {
+    private List<ServerMsg> connect(long sessionId) {
         List<ServerMsg> responses = new ArrayList<>();
-        sessions.register(connectionId, new Session(new Socket(), 0L, new DispatcherLoop(sessions)) {
+        sessions.register(sessionId, new Session(new Socket(), 0L, sessions, new DispatcherLoop(sessions)) {
             @Override
             public void send(ServerMsg message) {
                 responses.add(message);
@@ -146,13 +146,13 @@ class DispatcherLoopTest {
         return responses;
     }
 
-    private void join(long connectionId, String name, int character) {
-        dispatcherLoop.receive(connectionId, new ClientMsg.Join(name, character));
+    private void join(long sessionId, String name, int character) {
+        dispatcherLoop.receive(sessionId, new ClientMsg.Join(name, character));
         dispatcherLoop.tick();
     }
 
-    private void leave(long connectionId) {
-        dispatcherLoop.leave(connectionId);
+    private void leave(long sessionId) {
+        dispatcherLoop.leave(sessionId);
         dispatcherLoop.tick();
     }
 }

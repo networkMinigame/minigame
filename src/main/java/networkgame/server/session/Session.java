@@ -3,6 +3,7 @@ package networkgame.server.session;
 import networkgame.protocol.ClientMsg;
 import networkgame.protocol.ServerMsg;
 import networkgame.server.DispatcherLoop;
+import networkgame.server.SessionManager;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -16,31 +17,35 @@ import static networkgame.util.Log.log;
 public class Session {
 
     private final Socket socket;
-    private final long connectionId;
+    private final long sessionId;
     private final DispatcherLoop dispatcherLoop;
+    private final SessionManager sessionManager;
     private final BlockingQueue<ServerMsg> sendQueue = new LinkedBlockingQueue<>();
     private final Thread readThread;
     private final Thread writeThread;
     private final AtomicBoolean closed = new AtomicBoolean();
 
     /**
-     * 연결을 맡을 Reader와 Writer를 구성한다. 연결을 등록한 뒤 start()를 호출한다.
+     * 연결을 맡을 Reader와 Writer를 구성한다. start()에서 세션을 등록한 뒤 작업 스레드를 시작한다.
      *
      * @param socket 서버가 수락한 클라이언트 소켓
-     * @param connectionId 서버가 이 TCP 연결에 부여한 식별자
+     * @param sessionId 서버가 이 세션에 부여한 식별자
+     * @param sessionManager 이 세션을 등록할 연결 관리자
      * @param dispatcherLoop 메시지와 퇴장 이벤트를 처리할 서버 루프
      */
-    public Session(Socket socket, long connectionId, DispatcherLoop dispatcherLoop) {
+    public Session(Socket socket, long sessionId, SessionManager sessionManager, DispatcherLoop dispatcherLoop) {
         this.socket = socket;
-        this.connectionId = connectionId;
+        this.sessionId = sessionId;
+        this.sessionManager = sessionManager;
         this.dispatcherLoop = dispatcherLoop;
         this.readThread = new Thread(new ReadHandler(this, socket), "readHandler-" + socket.getPort());
         this.writeThread = new Thread(new WriteHandler(this, socket, sendQueue), "writeHandler-" + socket.getPort());
 
     }
 
-    /** 연결 등록이 끝난 뒤 Reader와 Writer를 한 번 시작한다. */
+    /** 관리자에 자신을 등록한 뒤 Reader와 Writer를 한 번 시작한다. */
     public void start() {
+        sessionManager.register(sessionId, this);
         writeThread.start();
         readThread.start();
     }
@@ -52,12 +57,12 @@ public class Session {
 
     /** 이 연결의 Reader가 읽은 메시지를 DispatcherLoop에 전달한다. */
     void receive(ClientMsg message) {
-        dispatcherLoop.receive(connectionId, message);
+        dispatcherLoop.receive(sessionId, message);
     }
 
     /** Reader의 마지막 수신 메시지 뒤에 퇴장 이벤트를 등록한다. */
     void readerFinished() {
-        dispatcherLoop.leave(connectionId);
+        dispatcherLoop.leave(sessionId);
     }
 
     /**

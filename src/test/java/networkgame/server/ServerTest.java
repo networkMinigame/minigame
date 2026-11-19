@@ -42,7 +42,7 @@ class ServerTest {
     }
 
     @Test
-    @DisplayName("여러 호출자가 동시에 종료해도 모두 종료 완료를 확인한다")
+    @DisplayName("여러 호출자가 동시에 종료해도 정상적으로 반환한다")
     void closesConcurrently() throws Exception {
         // given
         Server server = new Server(0);

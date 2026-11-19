@@ -19,30 +19,30 @@ final class PlayerManager {
     /**
      * 빈 ID를 배정하고 새 플레이어를 등록한다.
      *
-     * @param connectionId 입장하려는 TCP 연결의 식별자
+     * @param sessionId 입장하려는 세션의 식별자
      * @param name 입장 요청에 담긴 플레이어 이름
      * @param character 입장 요청에 담긴 캐릭터 번호
      * @return 등록한 플레이어. 이미 입장했거나 정원이 찼으면 {@code null}
      */
-    PlayerInfo register(long connectionId, String name, int character) {
-        if (players.containsKey(connectionId) || players.size() == MAX_PLAYERS) {
+    PlayerInfo register(long sessionId, String name, int character) {
+        if (players.containsKey(sessionId) || players.size() == MAX_PLAYERS) {
             return null;
         }
 
         int id = availableId();
         PlayerInfo player = new PlayerInfo(id, name, character,
                 SPAWN_X + id * SPAWN_SPACING, SPAWN_Y, Direction.DOWN);
-        players.put(connectionId, player);
+        players.put(sessionId, player);
         return player;
     }
 
     /**
      * 연결이 끝난 세션을 목록에서 제거한다. 입장 기록이 없으면 그대로 종료한다.
      *
-     * @param connectionId 제거할 TCP 연결의 식별자
+     * @param sessionId 제거할 세션의 식별자
      */
-    void remove(long connectionId) {
-        players.remove(connectionId);
+    void remove(long sessionId) {
+        players.remove(sessionId);
     }
 
     /** 현재 입장자 정보를 등록 순서대로 복사해 반환한다. */
@@ -50,8 +50,8 @@ final class PlayerManager {
         return List.copyOf(players.values());
     }
 
-    /** 입장한 플레이어의 연결 식별자를 등록 순서대로 모아 반환한다. */
-    List<Long> connectionIds() {
+    /** 입장한 플레이어의 세션 식별자를 등록 순서대로 모아 반환한다. */
+    List<Long> sessionIds() {
         return List.copyOf(players.keySet());
     }
 

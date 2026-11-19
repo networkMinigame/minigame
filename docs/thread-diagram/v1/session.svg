@@ -24,8 +24,8 @@
 <line x1="340" y1="96" x2="340" y2="472" stroke="#8c959f" stroke-width="1.6"/>
 <rect x="765" y="178" width="200" height="80" rx="8" fill="#fff8c5" stroke="#bf8700" stroke-width="1.6"/>
 <text x="865.0" y="198.0" font-size="15" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">receiveQueue</text>
-<text x="865.0" y="218.0" font-size="13" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">Received(connectionId, msg)</text>
-<text x="865.0" y="238.0" font-size="13" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">Leave(connectionId)</text>
+<text x="865.0" y="218.0" font-size="13" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">Received(sessionId, msg)</text>
+<text x="865.0" y="238.0" font-size="13" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">Leave(sessionId)</text>
 <rect x="765" y="317" width="200" height="82" rx="8" fill="#dafbe1" stroke="#1a7f37" stroke-width="1.6"/>
 <text x="865.0" y="338.0" font-size="15" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">DispatcherLoop</text>
 <text x="865.0" y="358.0" font-size="13" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">JOIN · LEAVE 처리</text>
