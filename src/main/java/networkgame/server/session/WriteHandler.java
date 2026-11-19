@@ -3,9 +3,8 @@ package networkgame.server.session;
 import networkgame.protocol.MessageCodec;
 import networkgame.protocol.ServerMsg;
 
-import java.io.BufferedWriter;
+import java.io.BufferedOutputStream;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.util.concurrent.BlockingQueue;
 
@@ -37,12 +36,12 @@ public class WriteHandler extends SessionHandler {
      */
     @Override
     protected void handle() throws IOException, InterruptedException {
-        BufferedWriter out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), UTF_8));
+        BufferedOutputStream out = new BufferedOutputStream(socket.getOutputStream());
 
         while (true) {
             String outputMessage = MessageCodec.encode(sendQueue.take());
 
-            out.write(outputMessage);
+            out.write(outputMessage.getBytes(UTF_8));
             out.write('\n');
             out.flush();
             log(outputMessage);

@@ -3,12 +3,10 @@ package networkgame.server.session;
 import networkgame.protocol.MessageCodec;
 import tools.jackson.core.JacksonException;
 
-import java.io.BufferedReader;
+import networkgame.util.Utf8LineReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.Socket;
 
-import static java.nio.charset.StandardCharsets.*;
 import static networkgame.util.Log.log;
 
 /** 세션의 소켓에서 클라이언트 메시지를 읽는 Reader 작업이다. */
@@ -33,7 +31,7 @@ public class ReadHandler extends SessionHandler {
     @Override
     protected void handle() throws IOException {
         try {
-            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream(), UTF_8));
+            Utf8LineReader in = new Utf8LineReader(socket.getInputStream());
             String line;
             while ((line = in.readLine()) != null) {
                 if (line.isBlank()) {
