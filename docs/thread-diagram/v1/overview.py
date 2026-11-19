@@ -34,8 +34,8 @@ d.text(140, 542, "(A와 같은 구조)", size=13, weight=400, color="#57606a")
 d.rect(380, 84, 600, 556, "process", r=12)
 d.node(790, 104, 170, 44, "thread", ["Acceptor"])
 d.text(875, 166, "접속마다 Reader·Writer 생성", size=12, weight=400, color="#57606a")
-d.node(600, 170, 180, 56, "queue", ["receiveQueue", "(from, msg)"])
-d.node(600, 296, 180, 76, "loop", ["GameLoop ×1", "20~30Hz", "세션 목록 소유"])
+d.node(600, 170, 180, 56, "queue", ["receiveQueue", "수신 메시지 · LEAVE"])
+d.node(600, 296, 180, 76, "loop", ["DispatcherLoop ×1", "처리 후 33ms 대기", "입장자 목록 관리"])
 
 # 서버 테두리에 걸친 세션 스레드.
 # 받는 길과 보내는 길이 교차하지 않게 A는 Reader/Writer, B는 Writer/Reader 순서
@@ -59,9 +59,9 @@ d.arrow([(260, 554), (318, 554)], "tcp", "TCP", (290, 554))
 # 받는 길: Reader -> receiveQueue
 d.arrow([(490, 264), (540, 264), (540, 198), (598, 198)], "recv")
 d.arrow([(490, 554), (940, 554), (940, 198), (782, 198)], "recv")
-# 큐 -> GameLoop
+# 큐 -> DispatcherLoop
 d.arrow([(690, 226), (690, 294)], "loop")
-# 보내는 길: GameLoop -> sendQueue -> Writer
+# 보내는 길: DispatcherLoop -> sendQueue -> Writer
 d.arrow([(600, 334), (492, 334)], "send")
 d.arrow([(600, 356), (560, 356), (560, 484), (492, 484)], "send")
 

@@ -8,6 +8,11 @@ public class ServerMain {
 
     static void main() throws IOException {
         Server server = new Server(PORT);
-        server.start();
+        Runtime.getRuntime().addShutdownHook(new Thread(server::close, "server-shutdown"));
+        try {
+            server.start();
+        } finally {
+            server.close();
+        }
     }
 }
