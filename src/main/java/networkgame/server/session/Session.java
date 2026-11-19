@@ -3,6 +3,8 @@ package networkgame.server.session;
 import networkgame.protocol.ClientMsg;
 import networkgame.protocol.ServerMsg;
 import networkgame.server.DispatcherLoop;
+import networkgame.server.Connection;
+import java.time.Duration;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -13,7 +15,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static networkgame.util.Log.log;
 
 /** 클라이언트 연결 하나의 소켓, Reader·Writer 스레드, 응답 큐를 관리한다. */
-public class Session {
+public class Session implements Connection {
 
     private final Socket socket;
     private final long connectionId;
@@ -48,6 +50,27 @@ public class Session {
     /** Writer가 전송할 응답을 세션의 큐에 넣는다. */
     public void send(ServerMsg message) {
         sendQueue.add(message);
+    }
+
+    /** 서버가 공통 마감까지 두 작업 스레드를 기다린다. 현재 스레드는 제외한다. */
+    @Override
+    public boolean awaitTermination(long deadline) throws InterruptedException {
+        for (Thread thread : new Thread[]{readThread, writeThread}) {
+            if (thread == Thread.currentThread()) {
+                continue;
+            }
+            long remaining = deadline - System.nanoTime();
+            if (remaining > 0) {
+                thread.join(Duration.ofNanos(remaining));
+            }
+        }
+        return isTerminated();
+    }
+
+    /** 두 작업 스레드의 종료 여부를 반환한다. */
+    @Override
+    public boolean isTerminated() {
+        return !readThread.isAlive() && !writeThread.isAlive();
     }
 
     /** 이 연결의 Reader가 읽은 메시지를 DispatcherLoop에 전달한다. */

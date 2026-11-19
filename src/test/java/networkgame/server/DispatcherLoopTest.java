@@ -19,7 +19,7 @@ class DispatcherLoopTest {
     @DisplayName("첫 참가자는 자기 정보만 담긴 WELCOME을 받는다")
     void sendsWelcomeToFirstPlayer() {
         // given
-        var first = connect(100);
+        List<ServerMsg> first = connect(100);
 
         // when
         join(100, "모카", 2);
@@ -41,7 +41,7 @@ class DispatcherLoopTest {
         // given
         connect(0);
         join(0, "모카", 0);
-        var newcomer = connect(1);
+        List<ServerMsg> newcomer = connect(1);
 
         // when
         join(1, "구름", 1);
@@ -57,7 +57,7 @@ class DispatcherLoopTest {
     @DisplayName("기존 참가자는 새 참가자의 정보를 JOINED로 받는다")
     void notifiesExistingPlayerOfJoin() {
         // given
-        var existing = connect(0);
+        List<ServerMsg> existing = connect(0);
         join(0, "모카", 0);
         existing.clear();
         connect(1);
@@ -81,13 +81,13 @@ class DispatcherLoopTest {
         join(0, "모카", 0);
         connect(1);
         join(1, "구름", 1);
-        var newcomer = connect(2);
+        leave(0);
+        List<ServerMsg> newcomer = connect(2);
 
         // when
-        leave(0);
+        join(2, "별", 2);
 
         // then
-        join(2, "별", 2);
         assertThat(newcomer).singleElement().isInstanceOfSatisfying(ServerMsg.Welcome.class,
                 welcome -> assertThat(welcome.players()).extracting(PlayerInfo::name)
                         .containsExactly("구름", "별"));
@@ -97,7 +97,7 @@ class DispatcherLoopTest {
     @DisplayName("퇴장한 연결에는 이후 입장 알림을 보내지 않는다")
     void skipsDepartedConnectionWhenNotifyingJoin() {
         // given
-        var departed = connect(0);
+        List<ServerMsg> departed = connect(0);
         join(0, "모카", 0);
         departed.clear();
         leave(0);
@@ -119,7 +119,7 @@ class DispatcherLoopTest {
         connect(1);
         join(1, "구름", 1);
         leave(0);
-        var newcomer = connect(2);
+        List<ServerMsg> newcomer = connect(2);
 
         // when
         join(2, "별", 2);
@@ -131,7 +131,16 @@ class DispatcherLoopTest {
 
     private List<ServerMsg> connect(long connectionId) {
         List<ServerMsg> responses = new ArrayList<>();
-        sessions.register(connectionId, responses::add);
+        sessions.register(connectionId, new Connection() {
+            @Override
+            public void send(ServerMsg message) {
+                responses.add(message);
+            }
+
+            @Override
+            public void close() {
+            }
+        });
         return responses;
     }
 
