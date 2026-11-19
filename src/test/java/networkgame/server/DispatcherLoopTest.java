@@ -133,7 +133,7 @@ class DispatcherLoopTest {
 
     private List<ServerMsg> connect(long sessionId) {
         List<ServerMsg> responses = new ArrayList<>();
-        sessions.register(sessionId, new Session(new Socket(), 0L, sessions, new DispatcherLoop(sessions)) {
+        sessions.register(sessionId, new Session(new Socket(), 0L, sessions) {
             @Override
             public void send(ServerMsg message) {
                 responses.add(message);
@@ -147,12 +147,12 @@ class DispatcherLoopTest {
     }
 
     private void join(long sessionId, String name, int character) {
-        dispatcherLoop.receive(sessionId, new ClientMsg.Join(name, character));
+        sessions.receive(sessionId, new ClientMsg.Join(name, character));
         dispatcherLoop.tick();
     }
 
     private void leave(long sessionId) {
-        dispatcherLoop.leave(sessionId);
+        sessions.leave(sessionId);
         dispatcherLoop.tick();
     }
 }

@@ -2,7 +2,6 @@ package networkgame.server.session;
 
 import networkgame.protocol.ClientMsg;
 import networkgame.protocol.ServerMsg;
-import networkgame.server.DispatcherLoop;
 import networkgame.server.SessionManager;
 
 import java.io.IOException;
@@ -18,7 +17,6 @@ public class Session {
 
     private final Socket socket;
     private final long sessionId;
-    private final DispatcherLoop dispatcherLoop;
     private final SessionManager sessionManager;
     private final BlockingQueue<ServerMsg> sendQueue = new LinkedBlockingQueue<>();
     private final Thread readThread;
@@ -31,13 +29,11 @@ public class Session {
      * @param socket 서버가 수락한 클라이언트 소켓
      * @param sessionId 서버가 이 세션에 부여한 식별자
      * @param sessionManager 이 세션을 등록할 연결 관리자
-     * @param dispatcherLoop 메시지와 퇴장 이벤트를 처리할 서버 루프
      */
-    public Session(Socket socket, long sessionId, SessionManager sessionManager, DispatcherLoop dispatcherLoop) {
+    public Session(Socket socket, long sessionId, SessionManager sessionManager) {
         this.socket = socket;
         this.sessionId = sessionId;
         this.sessionManager = sessionManager;
-        this.dispatcherLoop = dispatcherLoop;
         this.readThread = new Thread(new ReadHandler(this, socket), "readHandler-" + socket.getPort());
         this.writeThread = new Thread(new WriteHandler(this, socket, sendQueue), "writeHandler-" + socket.getPort());
 
@@ -55,14 +51,14 @@ public class Session {
         sendQueue.add(message);
     }
 
-    /** 이 연결의 Reader가 읽은 메시지를 DispatcherLoop에 전달한다. */
+    /** 이 연결의 Reader가 읽은 메시지를 SessionManager의 공용 수신 큐에 전달한다. */
     void receive(ClientMsg message) {
-        dispatcherLoop.receive(sessionId, message);
+        sessionManager.receive(sessionId, message);
     }
 
     /** Reader의 마지막 수신 메시지 뒤에 퇴장 이벤트를 등록한다. */
     void readerFinished() {
-        dispatcherLoop.leave(sessionId);
+        sessionManager.leave(sessionId);
     }
 
     /**

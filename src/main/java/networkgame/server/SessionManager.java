@@ -1,6 +1,9 @@
 package networkgame.server;
 
 import networkgame.protocol.ServerMsg;
+import networkgame.protocol.ClientMsg;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import networkgame.server.session.Session;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -9,6 +12,29 @@ import static networkgame.util.Log.log;
 
 /** JOIN 전 연결까지 추적하며 응답 전달과 전체 종료를 담당한다. */
 public final class SessionManager {
+    /** 수신 메시지와 연결 종료를 동일한 큐에 담는 서버 내부 이벤트다. */
+    sealed interface Event {
+        record Received(long sessionId, ClientMsg message) implements Event {}
+        record Leave(long sessionId) implements Event {}
+    }
+
+    private final BlockingQueue<Event> receiveQueue = new LinkedBlockingQueue<>();
+
+    /** Reader가 읽은 메시지를 세션 식별자와 함께 공용 수신 큐에 넣는다. */
+    public void receive(long sessionId, ClientMsg message) {
+        receiveQueue.add(new Event.Received(sessionId, message));
+    }
+
+    /** Reader가 마지막 수신 메시지를 넣은 뒤 퇴장 이벤트를 등록한다. */
+    public void leave(long sessionId) {
+        receiveQueue.add(new Event.Leave(sessionId));
+    }
+
+    /** DispatcherLoop가 가장 먼저 등록된 이벤트를 꺼낸다. 큐가 비어 있으면 null이다. */
+    Event pollEvent() {
+        return receiveQueue.poll();
+    }
+
     private final ConcurrentHashMap<Long, Session> sessions = new ConcurrentHashMap<>();
 
     /** Acceptor가 Reader 시작 전에 세션을 등록한다. */

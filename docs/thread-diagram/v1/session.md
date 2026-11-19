@@ -7,7 +7,7 @@
 ![세션 안쪽](session.svg)
 
 - 파랑은 Reader·Writer 스레드, 노랑은 큐, 초록은 DispatcherLoop 스레드다. 점선 테두리는 접속 하나를 담당하는 Session 객체다.
-- Reader는 소켓에서 읽은 한 줄을 `ClientMsg`로 변환한다. Session은 세션 ID를 메시지와 묶어 서버 공용 `receiveQueue`에 넣는다. Acceptor는 Session에 소켓과 두 관리 객체를 전달한다. Session.start()는 JOIN 전에 자신을 SessionManager에 등록하고 Reader·Writer를 시작한다.
+- Reader는 소켓에서 읽은 한 줄을 `ClientMsg`로 변환한다. Session은 SessionManager.receive()를 통해 세션 ID와 메시지를 공용 `receiveQueue`에 넣는다. Acceptor는 Session에 소켓과 세션 ID, SessionManager를 전달한다. Session.start()는 JOIN 전에 자신을 SessionManager에 등록하고 Reader·Writer를 시작한다.
 - DispatcherLoop는 큐에서 요청을 순서대로 꺼낸다. `JOIN`이면 PlayerManager에 입장자를 등록하고, 새 입장자의 큐에 `WELCOME`, 기존 입장자의 큐에 `JOINED`를 넣도록 SessionManager에 요청한다.
 - Writer는 자기 세션의 `sendQueue`에서 `ServerMsg`를 꺼내 JSON 한 줄로 만들어 소켓에 쓴다.
 
@@ -82,3 +82,5 @@ sequenceDiagram
     Server->>Loop: 남은 시간으로 join
     Server-->>Caller: 종료 결과 기록
 ```
+
+수신 큐는 SessionManager가 소유한다. Session은 SessionManager.receive()와 leave()로 이벤트를 등록하고, DispatcherLoop는 SessionManager.pollEvent()로 꺼낸다. 응답도 SessionManager.send()를 통해 해당 Session에 전달한다.

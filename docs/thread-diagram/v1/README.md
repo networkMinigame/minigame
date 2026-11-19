@@ -53,3 +53,5 @@
 
 
 SessionManager는 세션 ID별 Session을 직접 보관한다. Session은 응답을 큐에 넣고 소켓과 작업 스레드를 정리한다. 서버 전체 종료 순서는 [세션 종료 설명](session.md#서버-전체-종료)을 따른다.
+
+수신 큐는 SessionManager가 소유한다. Session은 SessionManager.receive()와 leave()로 이벤트를 등록하고, DispatcherLoop는 SessionManager.pollEvent()로 꺼낸다. 응답도 SessionManager.send()를 통해 해당 Session에 전달한다.

@@ -4,46 +4,18 @@ import networkgame.protocol.ClientMsg;
 import networkgame.protocol.PlayerInfo;
 import networkgame.protocol.ServerMsg;
 
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
+import networkgame.server.SessionManager.Event;
 
 /** 한 스레드에서 로비 요청을 처리하고 세션별 응답을 보낸다. */
 public final class DispatcherLoop implements Runnable {
     private static final long TICK_MILLIS = 33;
 
-    private sealed interface Event {
-        record Received(long sessionId, ClientMsg message) implements Event {}
-        record Leave(long sessionId) implements Event {}
-    }
-
-    private final BlockingQueue<Event> receiveQueue = new LinkedBlockingQueue<>();
     private final PlayerManager playerManager = new PlayerManager();
     private final SessionManager sessions;
 
     /** 서버와 연결 목록을 공유하는 요청 처리 루프를 구성한다. */
     DispatcherLoop(SessionManager sessions) {
         this.sessions = sessions;
-    }
-
-    /**
-     * Reader가 읽은 메시지를 발신 세션의 세션 식별자와 함께 등록한다.
-     * 여러 Reader에서 호출할 수 있으며, 메시지는 DispatcherLoop 스레드에서 처리한다.
-     *
-     * @param sessionId 발신 세션의 식별자
-     * @param message Reader가 변환에 성공한 클라이언트 메시지
-     */
-    public void receive(long sessionId, ClientMsg message) {
-        receiveQueue.add(new Event.Received(sessionId, message));
-    }
-
-    /**
-     * 연결이 끝난 세션의 퇴장 이벤트를 등록한다.
-     * 해당 세션의 Reader가 마지막 메시지를 등록한 뒤 호출한다.
-     *
-     * @param sessionId 종료된 세션의 식별자
-     */
-    public void leave(long sessionId) {
-        receiveQueue.add(new Event.Leave(sessionId));
     }
 
     /**
@@ -65,7 +37,7 @@ public final class DispatcherLoop implements Runnable {
     /** 큐에 쌓인 요청을 순서대로 처리한다. DispatcherLoop를 담당하는 스레드만 호출한다. */
     void tick() {
         Event event;
-        while ((event = receiveQueue.poll()) != null) {
+        while ((event = sessions.pollEvent()) != null) {
             switch (event) {
                 case Event.Received(var sessionId, var message) -> handle(sessionId, message);
                 case Event.Leave(var sessionId) -> {

@@ -67,7 +67,7 @@ public class Server {
                     }
                     try {
                         socket.setTcpNoDelay(true);
-                        Session session = new Session(socket, nextSessionId++, sessions, dispatcher);
+                        Session session = new Session(socket, nextSessionId++, sessions);
                         session.start();
                         registered(session);
                     } catch (IOException | RuntimeException e) {
