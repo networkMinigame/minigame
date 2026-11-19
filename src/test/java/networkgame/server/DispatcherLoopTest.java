@@ -14,8 +14,8 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class DispatcherLoopTest {
-    private final SessionManager sessions = new SessionManager();
-    private final DispatcherLoop dispatcherLoop = new DispatcherLoop(sessions);
+    private final SessionManager sessionManager = new SessionManager();
+    private final DispatcherLoop dispatcherLoop = new DispatcherLoop(sessionManager);
 
     @Test
     @DisplayName("첫 참가자는 자기 정보만 담긴 WELCOME을 받는다")
@@ -133,7 +133,7 @@ class DispatcherLoopTest {
 
     private List<ServerMsg> connect(long sessionId) {
         List<ServerMsg> responses = new ArrayList<>();
-        sessions.register(sessionId, new Session(new Socket(), 0L, sessions) {
+        sessionManager.register(sessionId, new Session(new Socket(), 0L, sessionManager) {
             @Override
             public void send(ServerMsg message) {
                 responses.add(message);
@@ -147,12 +147,12 @@ class DispatcherLoopTest {
     }
 
     private void join(long sessionId, String name, int character) {
-        sessions.receive(sessionId, new ClientMsg.Join(name, character));
+        sessionManager.receive(sessionId, new ClientMsg.Join(name, character));
         dispatcherLoop.tick();
     }
 
     private void leave(long sessionId) {
-        sessions.leave(sessionId);
+        sessionManager.leave(sessionId);
         dispatcherLoop.tick();
     }
 }

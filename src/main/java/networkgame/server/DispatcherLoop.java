@@ -11,11 +11,11 @@ public final class DispatcherLoop implements Runnable {
     private static final long TICK_MILLIS = 33;
 
     private final PlayerManager playerManager = new PlayerManager();
-    private final SessionManager sessions;
+    private final SessionManager sessionManager;
 
     /** 서버와 연결 목록을 공유하는 요청 처리 루프를 구성한다. */
-    DispatcherLoop(SessionManager sessions) {
-        this.sessions = sessions;
+    DispatcherLoop(SessionManager sessionManager) {
+        this.sessionManager = sessionManager;
     }
 
     /**
@@ -37,12 +37,12 @@ public final class DispatcherLoop implements Runnable {
     /** 큐에 쌓인 요청을 순서대로 처리한다. DispatcherLoop를 담당하는 스레드만 호출한다. */
     void tick() {
         Event event;
-        while ((event = sessions.pollEvent()) != null) {
+        while ((event = sessionManager.pollEvent()) != null) {
             switch (event) {
                 case Event.Received(var sessionId, var message) -> handle(sessionId, message);
                 case Event.Leave(var sessionId) -> {
                     playerManager.remove(sessionId);
-                    sessions.remove(sessionId);
+                    sessionManager.remove(sessionId);
                 }
             }
         }
@@ -66,11 +66,11 @@ public final class DispatcherLoop implements Runnable {
             return;
         }
 
-        sessions.send(sessionId, new ServerMsg.Welcome(player.id(), playerManager.players()));
+        sessionManager.send(sessionId, new ServerMsg.Welcome(player.id(), playerManager.players()));
         var joined = new ServerMsg.Joined(player);
         for (long recipient : playerManager.sessionIds()) {
             if (recipient != sessionId) {
-                sessions.send(recipient, joined);
+                sessionManager.send(recipient, joined);
             }
         }
     }

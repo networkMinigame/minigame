@@ -16,7 +16,7 @@ public class Server {
     private static final long SHUTDOWN_NANOS = Duration.ofSeconds(3).toNanos();
     private final int port;
     private final Object lifecycle = new Object();
-    private final SessionManager sessions = new SessionManager();
+    private final SessionManager sessionManager = new SessionManager();
     private final AtomicBoolean closing = new AtomicBoolean();
     private final CountDownLatch listening = new CountDownLatch(1);
     private ServerSocket listener;
@@ -33,7 +33,7 @@ public class Server {
      * @throws IOException 수신 소켓을 열거나 접속을 받는 중 오류가 발생한 경우
      */
     public void start() throws IOException {
-        DispatcherLoop dispatcher;
+        DispatcherLoop dispatcherLoop;
         try {
             synchronized (lifecycle) {
                 if (closing.get()) {
@@ -45,8 +45,8 @@ public class Server {
                 }
                 started = true;
                 listener = new ServerSocket(port);
-                dispatcher = new DispatcherLoop(sessions);
-                loopThread = Thread.ofPlatform().name("dispatcher-loop").start(dispatcher);
+                dispatcherLoop = new DispatcherLoop(sessionManager);
+                loopThread = Thread.ofPlatform().name("dispatcher-loop").start(dispatcherLoop);
                 listening.countDown();
             }
             while (!closing.get()) {
@@ -67,7 +67,7 @@ public class Server {
                     }
                     try {
                         socket.setTcpNoDelay(true);
-                        Session session = new Session(socket, nextSessionId++, sessions);
+                        Session session = new Session(socket, nextSessionId++, sessionManager);
                         session.start();
                         registered(session);
                     } catch (IOException | RuntimeException e) {
@@ -114,18 +114,18 @@ public class Server {
         }
 
         long deadline = System.nanoTime() + SHUTDOWN_NANOS;
-        ServerSocket serverSocket;
+        ServerSocket listener;
         Thread loop;
         synchronized (lifecycle) {
-            serverSocket = listener;
+            listener = this.listener;
             loop = loopThread;
         }
 
         boolean success = true;
         try {
             try {
-                if (serverSocket != null) {
-                    serverSocket.close();
+                if (listener != null) {
+                    listener.close();
                 }
             } catch (IOException | RuntimeException e) {
                 success = false;
@@ -133,7 +133,7 @@ public class Server {
             }
 
             try {
-                success = sessions.closeAll() && success;
+                success = sessionManager.closeAll() && success;
             } catch (RuntimeException e) {
                 success = false;
                 log("세션 전체 종료 실패 " + e.getMessage());
