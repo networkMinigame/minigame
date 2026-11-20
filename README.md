@@ -22,6 +22,12 @@ JDK를 따로 맞출 필요는 없습니다. JDK 25가 없으면 첫 빌드 때 
 ./gradlew build         # 빌드 (build/libs/*.jar)
 ```
 
+## 배포 서버
+
+클라우드에 띄운 서버의 공인 IP는 `129.203.160.45`입니다. 포트는 `ServerMain`의 `PORT`를 따릅니다.
+
+클라이언트는 기본으로 `localhost`에 접속합니다. 배포 서버에 붙으려면 `ClientMain`의 `HOST`를 위 IP로 바꿔 실행하세요.
+
 ## 문서
 
 - [설계 기준안](docs/architecture.md): 스레드 구조, 라운드 흐름, 메시지 처리 방식
