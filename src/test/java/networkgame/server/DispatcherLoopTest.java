@@ -1,6 +1,7 @@
 package networkgame.server;
 
 import networkgame.protocol.ClientMsg;
+import networkgame.protocol.Direction;
 import networkgame.protocol.PlayerInfo;
 import networkgame.protocol.ServerMsg;
 import networkgame.server.session.Session;
@@ -131,6 +132,96 @@ class DispatcherLoopTest {
                 welcome -> assertThat(welcome.id()).isZero());
     }
 
+    @Test
+    @DisplayName("MOVE를 받은 tick에 다른 입장자에게만 MOVED를 보낸다")
+    void broadcastsMovedToOthersOnTick() {
+        // given
+        List<ServerMsg> mover = connect(0);
+        join(0, "모카", 0);
+        List<ServerMsg> other = connect(1);
+        join(1, "구름", 1);
+        mover.clear();
+        other.clear();
+
+        // when
+        move(0, 300, 400, Direction.LEFT);
+
+        // then
+        assertThat(other).containsExactly(new ServerMsg.Moved(0, 300, 400, Direction.LEFT));
+        assertThat(mover).isEmpty();
+    }
+
+    @Test
+    @DisplayName("한 tick에 MOVE가 여러 번 오면 마지막 위치만 MOVED로 보낸다")
+    void sendsOnlyLatestMovePerTick() {
+        // given
+        connect(0);
+        join(0, "모카", 0);
+        List<ServerMsg> other = connect(1);
+        join(1, "구름", 1);
+        other.clear();
+        sessionManager.receive(0, new ClientMsg.Move(300, 400, Direction.LEFT));
+        sessionManager.receive(0, new ClientMsg.Move(310, 400, Direction.RIGHT));
+
+        // when
+        dispatcherLoop.tick();
+
+        // then
+        assertThat(other).containsExactly(new ServerMsg.Moved(0, 310, 400, Direction.RIGHT));
+    }
+
+    @Test
+    @DisplayName("로비 밖 좌표는 가장 가까운 경계로 잘라 MOVED로 보낸다")
+    void clampsMoveOutsideLobby() {
+        // given
+        connect(0);
+        join(0, "모카", 0);
+        List<ServerMsg> other = connect(1);
+        join(1, "구름", 1);
+        other.clear();
+
+        // when
+        move(0, -100, 99_999, Direction.DOWN);
+
+        // then
+        assertThat(other).containsExactly(new ServerMsg.Moved(0, 52, 941, Direction.DOWN));
+    }
+
+    @Test
+    @DisplayName("이미 경계에 있는데 다시 로비 밖 좌표가 오면 MOVED를 보내지 않는다")
+    void skipsRepeatedMoveOutsideLobby() {
+        // given
+        connect(0);
+        join(0, "모카", 0);
+        List<ServerMsg> other = connect(1);
+        join(1, "구름", 1);
+        move(0, -100, 99_999, Direction.DOWN);
+        other.clear();
+
+        // when
+        move(0, -500, 50_000, Direction.DOWN);
+
+        // then
+        assertThat(other).isEmpty();
+    }
+
+    @Test
+    @DisplayName("세션 ID가 커도 움직인 본인에게는 MOVED를 보내지 않는다")
+    void skipsMoverWithLargeSessionId() {
+        // given
+        List<ServerMsg> mover = connect(200);
+        join(200, "모카", 0);
+        connect(300);
+        join(300, "구름", 1);
+        mover.clear();
+
+        // when
+        move(200, 300, 400, Direction.LEFT);
+
+        // then
+        assertThat(mover).isEmpty();
+    }
+
     private List<ServerMsg> connect(long sessionId) {
         List<ServerMsg> responses = new ArrayList<>();
         sessionManager.register(sessionId, new Session(new Socket(), 0L, sessionManager) {
@@ -153,6 +244,11 @@ class DispatcherLoopTest {
 
     private void leave(long sessionId) {
         sessionManager.leave(sessionId);
+        dispatcherLoop.tick();
+    }
+
+    private void move(long sessionId, double x, double y, Direction direction) {
+        sessionManager.receive(sessionId, new ClientMsg.Move(x, y, direction));
         dispatcherLoop.tick();
     }
 }
