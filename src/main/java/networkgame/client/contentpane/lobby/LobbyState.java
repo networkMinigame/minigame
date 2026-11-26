@@ -1,5 +1,6 @@
 package networkgame.client.contentpane.lobby;
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +19,12 @@ final class LobbyState {
     // WELCOME을 받기 전에는 null입니다.
     private Integer localPlayerId;
 
+    // 다른 플레이어의 MOVED가 이만큼 끊기면 멈춘 것으로 본다. 서버 tick(33ms) 세 번 정도이다.
+    static final long REMOTE_IDLE_MILLS = 100;
+
+    private final Map<Integer, Long> lastMovedMills = new HashMap<>();
+
+
     void welcome(int localPlayerId, List<PlayerInfo> playerInfos) {
         this.localPlayerId = localPlayerId;
 
@@ -34,6 +41,15 @@ final class LobbyState {
         players.computeIfPresent(playerId, (id, player) -> player.moveTo(x, y, direction));
     }
 
+    void moveRemote(int playerId, double x, double y, Direction direction, long nowMillis) {
+        if (!players.containsKey(playerId)) {
+            return;
+        }
+
+        moveTo(playerId, x, y, direction);
+        lastMovedMills.put(playerId, nowMillis);
+    }
+
     /**
      * 플레이어를 넣는다. 같은 {@code playerId}가 이미 있으면 덮어쓰고, 목록 순서는 처음 들어온 자리를 유지한다.
      */
@@ -44,6 +60,7 @@ final class LobbyState {
     /** 플레이어 한 명을 목록에서 뺀다. 목록에 없는 {@code playerId}면 아무것도 하지 않는다. */
     void removeByPlayerId(int playerId) {
         players.remove(playerId);
+        lastMovedMills.remove(playerId);
     }
 
     /**
@@ -71,5 +88,17 @@ final class LobbyState {
      */
     List<Player> findAll() {
         return List.copyOf(players.values());
+    }
+
+    public void stopIdleRemotePlayers(long nowMillis) {
+        List<Integer> idlePlayerIds = lastMovedMills.entrySet().stream()
+                .filter(entry -> nowMillis - entry.getValue() >= REMOTE_IDLE_MILLS)
+                .map(Map.Entry::getKey)
+                .toList();
+
+        for (Integer idlePlayerId : idlePlayerIds) {
+            players.computeIfPresent(idlePlayerId, (id, player) -> player.stop());
+            lastMovedMills.remove(idlePlayerId);
+        }
     }
 }

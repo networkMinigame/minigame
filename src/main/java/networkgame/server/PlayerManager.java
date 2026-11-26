@@ -3,9 +3,7 @@ package networkgame.server;
 import networkgame.protocol.Direction;
 import networkgame.protocol.PlayerInfo;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /** 입장자 목록을 관리한다. DispatcherLoop 스레드에서만 사용한다. */
 final class PlayerManager {
@@ -14,7 +12,16 @@ final class PlayerManager {
     private static final int SPAWN_Y = 470;
     private static final int SPAWN_SPACING = 120;
 
+    // 클라이언트 LobbyMovement와 같은 범위. 지도 map/lobby.png(1672x941)와 고양이 그림 크기(104px)로 계산한 값이다.
+    // 좌우는 그림 반 폭(52)만큼 안쪽, 위는 그림 높이와 이름표(104 + 32)만큼 아래까지다.
+    private static final double MIN_X = 52;
+    private static final double MAX_X = 1620;
+    private static final double MIN_Y = 136;
+    private static final double MAX_Y = 941;
+
     private final Map<Long, PlayerInfo> players = new LinkedHashMap<>();
+
+    private final Set<Long> movedSessionIds = new LinkedHashSet<>();
 
     /**
      * 빈 ID를 배정하고 새 플레이어를 등록한다.
@@ -37,12 +44,38 @@ final class PlayerManager {
     }
 
     /**
+     * 입장한 플레이어의 위치와 방향을 바꾸고 MOVED를 보낼 대상으로 표시한다.
+     */
+    void move(long sessionId, double x, double y, Direction direction) {
+        PlayerInfo playerInfo = players.get(sessionId);
+        if (playerInfo == null) {
+            return;
+        }
+
+        PlayerInfo movePlayerInfo = new PlayerInfo(
+                playerInfo.id(),
+                playerInfo.name(),
+                playerInfo.character(),
+                Math.clamp(x, MIN_X, MAX_X),
+                Math.clamp(y, MIN_Y, MAX_Y),
+                direction
+        );
+        if (movePlayerInfo.equals(playerInfo)) {
+            return;
+        }
+        players.put(sessionId, movePlayerInfo);
+
+        movedSessionIds.add(sessionId);
+    }
+
+    /**
      * 연결이 끝난 세션을 목록에서 제거한다. 입장 기록이 없으면 그대로 종료한다.
      *
      * @param sessionId 제거할 세션의 식별자
      */
     void remove(long sessionId) {
         players.remove(sessionId);
+        movedSessionIds.remove(sessionId);
     }
 
     /** 현재 입장자 정보를 등록 순서대로 복사해 반환한다. */
@@ -67,5 +100,24 @@ final class PlayerManager {
             }
         }
         throw new IllegalStateException("빈 플레이어 ID가 없습니다.");
+    }
+
+    /**
+     * {@link #clearMoved()}뒤로 위치가 바뀐 플레이어를 세션 식별자와 함께 바뀐 순서대로 돌려준다.
+     * @return
+     */
+    Map<Long, PlayerInfo> movedPlayerInfos() {
+        Map<Long, PlayerInfo> movedPlayerInfos = new LinkedHashMap<>();
+        for (Long movedSessionId : movedSessionIds) {
+            movedPlayerInfos.put(movedSessionId, players.get(movedSessionId));
+        }
+        return movedPlayerInfos;
+    }
+
+    /**
+     * 위치가 바뀌었다는 표시를 모두 지운다. MOVED를 보낸 뒤 호출한다.
+     */
+    void clearMoved() {
+        movedSessionIds.clear();
     }
 }

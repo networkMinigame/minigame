@@ -18,7 +18,7 @@
 
 | 스레드 | 개수 | 하는 일 | 만질 수 있는 것 |
 |---|---|---|---|
-| **EDT** | 1 | 방향키·타이머로 내 고양이 이동, 화면 그리기. Reader가 넘긴 메시지로 로비 상태 갱신. 보낼 메시지는 sendQueue에 넣기만 함. 창을 닫으면 연결을 닫음 | **로비 상태**(`LobbyState`), sendQueue (넣기만) |
+| **EDT** | 1 | 방향키·타이머로 내 고양이 이동, 화면 그리기. 33ms마다 내 위치가 바뀌었으면 MOVE를 sendQueue에 넣음. Reader가 넘긴 메시지로 로비 상태 갱신(MOVED가 100ms 끊긴 고양이는 멈춤). 창을 닫으면 연결을 닫음 | **로비 상태**(`LobbyState`), sendQueue (넣기만) |
 | **Writer** | 1 | sendQueue에서 `take()` → JSON 한 줄로 바꿔 소켓에 쓰기 | 소켓 출력 |
 | **Reader** | 1 | 소켓에서 한 줄 읽기 → `ServerMsg`로 변환 → `invokeLater`로 EDT에 넘김 | 소켓 입력 |
 
