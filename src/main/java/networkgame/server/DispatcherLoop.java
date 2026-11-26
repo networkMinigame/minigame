@@ -42,13 +42,27 @@ public final class DispatcherLoop implements Runnable {
         while ((event = sessionManager.pollEvent()) != null) {
             switch (event) {
                 case Event.Received(var sessionId, var message) -> handle(sessionId, message);
-                case Event.Leave(var sessionId) -> {
-                    playerManager.remove(sessionId);
-                    sessionManager.remove(sessionId);
-                }
+                case Event.Leave(long sessionId) -> leave(sessionId);
             }
         }
         broadcastMoves();
+    }
+
+    /**
+     * 퇴장한 연결과 플레이어를 제거하고 남은 입장자에게 LEFT를 보낸다.
+     * 이미 처리했거나 JOIN하지 않은 연결의 종료에는 알림을 보내지 않는다.
+     */
+    private void leave(long sessionId) {
+        PlayerInfo departed = playerManager.remove(sessionId);
+        sessionManager.remove(sessionId);
+        if (departed == null) {
+            return;
+        }
+
+        ServerMsg.Left left = new ServerMsg.Left(departed.id());
+        for (long recipient : playerManager.sessionIds()) {
+            sessionManager.send(recipient, left);
+        }
     }
 
     /** 현재 지원하는 입장 메시지를 처리한다. 다른 메시지는 후속 기능에서 처리한다. */

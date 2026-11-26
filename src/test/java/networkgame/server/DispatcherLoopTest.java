@@ -222,6 +222,91 @@ class DispatcherLoopTest {
         assertThat(mover).isEmpty();
     }
 
+    @Test
+    @DisplayName("남은 참가자 모두에게 퇴장한 플레이어 ID를 알린다")
+    void notifiesRemainingPlayersOfLeave() {
+        // given
+        connect(100);
+        join(100, "모카", 0);
+        List<ServerMsg> second = connect(200);
+        join(200, "구름", 1);
+        List<ServerMsg> third = connect(300);
+        join(300, "별", 2);
+        second.clear();
+        third.clear();
+
+        // when
+        leave(100);
+
+        // then
+        assertThat(second).containsExactly(new ServerMsg.Left(0));
+        assertThat(third).containsExactly(new ServerMsg.Left(0));
+    }
+
+    @Test
+    @DisplayName("이미 퇴장한 연결의 종료에는 알림을 다시 보내지 않는다")
+    void ignoresRepeatedLeave() {
+        // given
+        connect(100);
+        join(100, "모카", 0);
+        List<ServerMsg> remaining = connect(200);
+        join(200, "구름", 1);
+        leave(100);
+        remaining.clear();
+
+        // when
+        leave(100);
+
+        // then
+        assertThat(remaining).isEmpty();
+    }
+
+    @Test
+    @DisplayName("입장하지 않은 연결이 끊겨도 퇴장 알림을 보내지 않는다")
+    void ignoresLeaveBeforeJoin() {
+        // given
+        List<ServerMsg> remaining = connect(100);
+        join(100, "모카", 0);
+        connect(200);
+        remaining.clear();
+
+        // when
+        leave(200);
+
+        // then
+        assertThat(remaining).isEmpty();
+    }
+
+    @Test
+    @DisplayName("입장 전 연결에는 다른 참가자의 퇴장 알림을 보내지 않는다")
+    void skipsUnjoinedConnectionWhenNotifyingLeave() {
+        // given
+        connect(100);
+        join(100, "모카", 0);
+        List<ServerMsg> pending = connect(200);
+
+        // when
+        leave(100);
+
+        // then
+        assertThat(pending).isEmpty();
+    }
+
+    @Test
+    @DisplayName("퇴장한 연결에는 자신의 퇴장 알림을 보내지 않는다")
+    void skipsDepartedConnectionWhenNotifyingLeave() {
+        // given
+        List<ServerMsg> departed = connect(100);
+        join(100, "모카", 0);
+        departed.clear();
+
+        // when
+        leave(100);
+
+        // then
+        assertThat(departed).isEmpty();
+    }
+
     private List<ServerMsg> connect(long sessionId) {
         List<ServerMsg> responses = new ArrayList<>();
         sessionManager.register(sessionId, new Session(new Socket(), 0L, sessionManager) {
