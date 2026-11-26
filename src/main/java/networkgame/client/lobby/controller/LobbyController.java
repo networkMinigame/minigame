@@ -15,7 +15,7 @@ import networkgame.client.network.Client;
 import networkgame.client.lobby.model.LobbyMovement;
 import networkgame.client.lobby.model.LobbyState;
 import networkgame.client.lobby.model.Player;
-import networkgame.client.lobby.view.LobbyPanel;
+import networkgame.client.lobby.view.LobbyView;
 import networkgame.client.lobby.view.assets.LobbyAssets;
 import networkgame.client.input.ArrowKeys;
 import networkgame.protocol.ClientMsg;
@@ -28,7 +28,7 @@ import networkgame.protocol.ServerMsg;
  * <p>생성자를 포함한 모든 메서드는 EDT에서 부른다. 생성할 때 {@link JFrame}을 만들고, 타이머와 키 입력도 EDT에서 돌고,
  * 서버 메시지도 {@code invokeLater}로 EDT에 넘겨 받아서 {@link LobbyState}를 락 없이 바꾼다.
  */
-public final class LobbySession {
+public final class LobbyController {
     // 약 60fps.
     private static final int FRAME_MILLIS = 16;
 
@@ -52,7 +52,7 @@ public final class LobbySession {
      * @param client    연결은 됐지만 아직 {@link Client#start}를 부르지 않은 클라이언트. 창을 닫으면 이 세션이 닫는다
      * @param character 고양이 번호. 0 이상, 고양이 수 미만
      */
-    public LobbySession(LobbyAssets assets, Client client, String name, int character) {
+    public LobbyController(LobbyAssets assets, Client client, String name, int character) {
         this.assets = assets;
         this.client = client;
 
@@ -70,7 +70,7 @@ public final class LobbySession {
      * 창을 닫으면 멈추고 연결을 닫는다.
      */
     public void show() {
-        LobbyPanel lobby = new LobbyPanel(state, assets);
+        LobbyView lobby = new LobbyView(state, assets);
         configureWindow(lobby);
         ArrowKeys keys = new ArrowKeys(window);
 
@@ -193,7 +193,7 @@ public final class LobbySession {
                         reconnected.close();
                         return;
                     }
-                    new LobbySession(assets, reconnected, join.name(), join.character()).show();
+                    new LobbyController(assets, reconnected, join.name(), join.character()).show();
                     window.dispose();
                 } catch (InterruptedException error) {
                     Thread.currentThread().interrupt();

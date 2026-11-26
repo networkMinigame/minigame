@@ -8,7 +8,7 @@ import static networkgame.util.Log.log;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
-import networkgame.client.lobby.controller.LobbySession;
+import networkgame.client.lobby.controller.LobbyController;
 import networkgame.client.lobby.view.assets.LobbyAssetLoader;
 import networkgame.client.lobby.view.assets.LobbyAssets;
 import networkgame.client.network.Client;
@@ -58,7 +58,7 @@ public class ClientMain {
         }
 
         SwingUtilities.invokeLater(() -> {
-            new LobbySession(assets, client, playerName, CHARACTER_INDEX).show();
+            new LobbyController(assets, client, playerName, CHARACTER_INDEX).show();
         });
     }
 

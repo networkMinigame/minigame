@@ -17,7 +17,7 @@ import networkgame.client.lobby.view.assets.LobbyAssets;
  * 로비 지도와 플레이어들을 그린다. {@link LobbyState}를 읽기만 하고 바꾸지 않는다.
  * <p>지도는 비율을 유지한 채 패널에 꽉 차게 늘리거나 줄이고, 남는 곳은 배경색으로 둔다.
  */
-public final class LobbyPanel extends JPanel {
+public final class LobbyView extends JPanel {
     // 처음 창 크기. 지도 그림(1672×941)과 같은 16:9 비율이다.
     private static final Dimension PREFERRED_SIZE = new Dimension(1000, 563);
     // 화면 갱신 3번(약 48ms)마다 걷기 그림을 한 장 넘긴다.
@@ -37,7 +37,7 @@ public final class LobbyPanel extends JPanel {
     private final LobbyAssets assets;
     private long animationTick;
 
-    public LobbyPanel(LobbyState state, LobbyAssets assets) {
+    public LobbyView(LobbyState state, LobbyAssets assets) {
         this.state = state;
         this.assets = assets;
         setBackground(LobbyStyle.INK);
