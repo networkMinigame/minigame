@@ -1,5 +1,7 @@
 package networkgame.server;
 
+import networkgame.lobby.LobbyWalkArea;
+import networkgame.protocol.Direction;
 import networkgame.protocol.PlayerInfo;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -53,5 +55,40 @@ class PlayerManagerTest {
 
         // then
         assertThat(manager.players()).contains(existing);
+    }
+
+    @Test
+    @DisplayName("네 참가자 모두 흙길 안에서 입장한다")
+    void placesEveryPlayerOnDirt() {
+        // given
+        PlayerManager manager = new PlayerManager();
+        LobbyWalkArea area = LobbyWalkArea.standard();
+
+        // when
+        manager.register(100, "첫째");
+        manager.register(200, "둘째");
+        manager.register(300, "셋째");
+        manager.register(400, "넷째");
+
+        // then
+        assertThat(manager.players()).hasSize(4)
+                .allMatch(player -> area.contains(player.x(), player.y()));
+    }
+
+    @Test
+    @DisplayName("흙길 사이에서 풀섬을 가로지르는 요청은 마지막 승인 위치를 바꾸지 않는다")
+    void keepsLastPositionWhenMoveCrossesGrass() {
+        // given
+        PlayerManager manager = new PlayerManager();
+        manager.register(100, "모카");
+        manager.move(100, 430, 590, Direction.DOWN);
+        manager.clearMoved();
+
+        // when
+        manager.move(100, 310, 590, Direction.LEFT);
+
+        // then
+        assertThat(manager.players()).containsExactly(new PlayerInfo(0, "모카", 0, 430, 590, Direction.DOWN));
+        assertThat(manager.movedPlayerInfos()).isEmpty();
     }
 }
