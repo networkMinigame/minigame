@@ -15,6 +15,7 @@ import networkgame.client.lobby.model.Player;
 import networkgame.client.lobby.view.LobbyView;
 import networkgame.client.lobby.view.assets.LobbyAssets;
 import networkgame.client.input.ArrowKeys;
+import networkgame.lobby.LobbyWalkArea;
 import networkgame.protocol.ClientMsg;
 import networkgame.protocol.Direction;
 import networkgame.protocol.PlayerInfo;
@@ -37,6 +38,7 @@ public final class LobbyController {
 
     private final JFrame window = new JFrame("미니게임 · 로비");
     private final LobbyAssets assets;
+    private final LobbyWalkArea walkArea;
     private final LobbyState state = new LobbyState();
     private final LobbyMovement movement;
     private final Client client;
@@ -53,12 +55,13 @@ public final class LobbyController {
      * @param client    연결은 됐지만 아직 {@link Client#start}를 부르지 않은 클라이언트. 창을 닫으면 이 컨트롤러가 닫는다
      * @param character 고양이 번호. 0 이상, 고양이 수 미만
      */
-    public LobbyController(LobbyAssets assets, Client client, String name, int character) {
+    public LobbyController(LobbyAssets assets, LobbyWalkArea walkArea, Client client, String name, int character) {
         this.assets = assets;
+        this.walkArea = walkArea;
         this.client = client;
-        this.movement = new LobbyMovement(assets.map().getWidth(), assets.map().getHeight());
+        this.movement = new LobbyMovement(walkArea);
         this.join = new ClientMsg.Join(name, character);
-        this.moveSender = new MoveSender(client::send);
+        this.moveSender = new MoveSender(client::send, walkArea);
     }
 
     /**
@@ -124,7 +127,9 @@ public final class LobbyController {
         if (player == null) {
             return;
         }
-        state.save(movement.next(player, pressed));
+        Player next = movement.next(player, pressed);
+        moveSender.sendWaypointIfNeeded(player, next);
+        state.save(next);
     }
 
     private void sendLocalMove() {
@@ -209,7 +214,7 @@ public final class LobbyController {
                         reconnected.close();
                         return;
                     }
-                    new LobbyController(assets, reconnected, join.name(), join.character()).show();
+                    new LobbyController(assets, walkArea, reconnected, join.name(), join.character()).show();
                     window.dispose();
                 } catch (InterruptedException error) {
                     Thread.currentThread().interrupt();

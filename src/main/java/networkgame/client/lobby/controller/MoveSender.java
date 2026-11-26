@@ -1,6 +1,7 @@
 package networkgame.client.lobby.controller;
 
 import networkgame.client.lobby.model.Player;
+import networkgame.lobby.LobbyWalkArea;
 import networkgame.protocol.ClientMsg;
 
 import java.util.function.Consumer;
@@ -11,11 +12,23 @@ import java.util.function.Consumer;
  */
 final class MoveSender {
     private final Consumer<ClientMsg> send;
+    private final LobbyWalkArea walkArea;
 
     private ClientMsg.Move lastSentMove;
 
-    public MoveSender(Consumer<ClientMsg> send) {
+    MoveSender(Consumer<ClientMsg> send, LobbyWalkArea walkArea) {
         this.send = send;
+        this.walkArea = walkArea;
+    }
+
+    /** 이전 전송 위치에서 다음 프레임 위치까지 직선으로 갈 수 없으면 경유 위치를 먼저 보낸다. */
+    void sendWaypointIfNeeded(Player current, Player next) {
+        if (current.x() == next.x() && current.y() == next.y()) {
+            return;
+        }
+        if (lastSentMove == null || !walkArea.canMove(lastSentMove.x(), lastSentMove.y(), next.x(), next.y())) {
+            sendIfChanged(current);
+        }
     }
 
     void sendIfChanged(Player localPlayer) {

@@ -1,5 +1,6 @@
 package networkgame.client.lobby.model;
 
+import networkgame.lobby.LobbyWalkArea;
 import networkgame.protocol.Direction;
 
 import java.util.Set;
@@ -12,30 +13,16 @@ public final class LobbyMovement {
     // 한 프레임(16ms)에 움직이는 거리, 지도 픽셀 단위라 초당 약 300px이다.
     static final double STEP = 5;
 
-    private final double minX;
-    private final double maxX;
-    private final double minY;
-    private final double maxY;
+    private final LobbyWalkArea walkArea;
 
-    /**
-     * 지도 크기로 고양이가 움직일 수 있는 범위를 정한다.
-     * <p>좌표는 고양이 발밑 가운데라서, 좌우는 그림 반 폭만큼 안쪽까지, 위쪽은 머리 위 이름표까지 지도 안에 들어오게 한다.
-     *
-     * @param mapWidth  지도 그림의 너비(px)
-     * @param mapHeight 지도 그림의 높이(px)
-     */
-    public LobbyMovement(int mapWidth, int mapHeight) {
-        int size = Player.CAT_SIZE;
-        this.minX = size / 2.0;
-        this.maxX = mapWidth - size / 2.0;
-        this.minY = size + 32;
-        this.maxY = mapHeight;
+    public LobbyMovement(LobbyWalkArea walkArea) {
+        this.walkArea = walkArea;
     }
 
     /**
      * 한 프레임 뒤의 플레이어를 계산한다.
      * <p>키를 다 뗐거나 반대 방향을 같이 눌렀으면 그 자리에서 바라보던 방향 그대로 멈춘다.
-     * 지도 범위 끝에서 바깥쪽 키를 누르면 그 자리에 선 채로 그 방향을 본다.
+     * 이동 선분이 흙길을 벗어나면 그 자리에 선 채로 입력한 방향을 본다.
      *
      * @param pressed 지금 눌려 있는 방향키
      * @return 한 프레임 뒤의 플레이어. 바뀐 게 없으면 {@code player}와 같은 값
@@ -46,8 +33,11 @@ public final class LobbyMovement {
             return player.stop();
         }
         double step = STEP / offset.length();
-        double x = Math.clamp(player.x() + offset.dx() * step, minX, maxX);
-        double y = Math.clamp(player.y() + offset.dy() * step, minY, maxY);
+        double x = player.x() + offset.dx() * step;
+        double y = player.y() + offset.dy() * step;
+        if (!walkArea.canMove(player.x(), player.y(), x, y)) {
+            return player.moveTo(player.x(), player.y(), offset.facing());
+        }
         return player.moveTo(x, y, offset.facing());
     }
 

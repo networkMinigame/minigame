@@ -41,6 +41,7 @@ application {
 
 tasks.processResources {
     from("resources") {
-        include("map/lobby.png", "characters/round-cats/**/*_idle_*.png", "characters/round-cats/**/*_run_*.png")
+        include("map/lobby.png", "map/lobby-walkable.png",
+                "characters/round-cats/**/*_idle_*.png", "characters/round-cats/**/*_run_*.png")
     }
 }

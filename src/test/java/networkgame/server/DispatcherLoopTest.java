@@ -147,10 +147,10 @@ class DispatcherLoopTest {
         other.clear();
 
         // when
-        move(0, 300, 400, Direction.LEFT);
+        move(0, 829, 463, Direction.LEFT);
 
         // then
-        assertThat(other).containsExactly(new ServerMsg.Moved(0, 300, 400, Direction.LEFT));
+        assertThat(other).containsExactly(new ServerMsg.Moved(0, 829, 463, Direction.LEFT));
         assertThat(mover).isEmpty();
     }
 
@@ -163,19 +163,19 @@ class DispatcherLoopTest {
         List<ServerMsg> other = connect(1);
         join(1, "구름", 1);
         other.clear();
-        sessionManager.receive(0, new ClientMsg.Move(300, 400, Direction.LEFT));
-        sessionManager.receive(0, new ClientMsg.Move(310, 400, Direction.RIGHT));
+        sessionManager.receive(0, new ClientMsg.Move(829, 463, Direction.LEFT));
+        sessionManager.receive(0, new ClientMsg.Move(839, 463, Direction.RIGHT));
 
         // when
         dispatcherLoop.tick(0);
 
         // then
-        assertThat(other).containsExactly(new ServerMsg.Moved(0, 310, 400, Direction.RIGHT));
+        assertThat(other).containsExactly(new ServerMsg.Moved(0, 839, 463, Direction.RIGHT));
     }
 
     @Test
-    @DisplayName("로비 밖 좌표는 가장 가까운 경계로 잘라 MOVED로 보낸다")
-    void clampsMoveOutsideLobby() {
+    @DisplayName("지도 안의 풀숲을 목적지로 보내면 MOVED를 보내지 않는다")
+    void rejectsMoveIntoGrass() {
         // given
         connect(0);
         join(0, "모카", 0);
@@ -184,21 +184,20 @@ class DispatcherLoopTest {
         other.clear();
 
         // when
-        move(0, -100, 99_999, Direction.DOWN);
+        move(0, 836, 840, Direction.DOWN);
 
         // then
-        assertThat(other).containsExactly(new ServerMsg.Moved(0, 52, 941, Direction.DOWN));
+        assertThat(other).isEmpty();
     }
 
     @Test
-    @DisplayName("이미 경계에 있는데 다시 로비 밖 좌표가 오면 MOVED를 보내지 않는다")
-    void skipsRepeatedMoveOutsideLobby() {
+    @DisplayName("지도 밖 좌표를 보내면 MOVED를 보내지 않는다")
+    void rejectsMoveOutsideMap() {
         // given
         connect(0);
         join(0, "모카", 0);
         List<ServerMsg> other = connect(1);
         join(1, "구름", 1);
-        move(0, -100, 99_999, Direction.DOWN);
         other.clear();
 
         // when
@@ -206,6 +205,26 @@ class DispatcherLoopTest {
 
         // then
         assertThat(other).isEmpty();
+    }
+
+    @Test
+    @DisplayName("한 tick에 경유 위치와 목적지를 받으면 풀섬을 돌아 목적지까지 승인한다")
+    void acceptsWaypointsAroundGrassInOneTick() {
+        // given
+        connect(0);
+        join(0, "모카", 0);
+        List<ServerMsg> other = connect(1);
+        join(1, "구름", 1);
+        move(0, 407.25, 571.5, Direction.LEFT);
+        other.clear();
+        sessionManager.receive(0, new ClientMsg.Move(412.25, 571.5, Direction.RIGHT));
+        sessionManager.receive(0, new ClientMsg.Move(412.25, 576.5, Direction.DOWN));
+
+        // when
+        dispatcherLoop.tick(0);
+
+        // then
+        assertThat(other).containsExactly(new ServerMsg.Moved(0, 412.25, 576.5, Direction.DOWN));
     }
 
     @Test
@@ -219,7 +238,7 @@ class DispatcherLoopTest {
         mover.clear();
 
         // when
-        move(200, 300, 400, Direction.LEFT);
+        move(200, 829, 463, Direction.LEFT);
 
         // then
         assertThat(mover).isEmpty();
