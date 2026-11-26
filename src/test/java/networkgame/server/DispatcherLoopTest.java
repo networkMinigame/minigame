@@ -307,6 +307,197 @@ class DispatcherLoopTest {
         assertThat(departed).isEmpty();
     }
 
+    @Test
+    @DisplayName("3초가 되기 전에는 PING을 보내지 않는다")
+    void doesNotPingBeforeInterval() {
+        // given
+        List<ServerMsg> responses = connect(100);
+        join(100, "모카", 0);
+        responses.clear();
+
+        // when
+        dispatcherLoop.tick(2_999);
+
+        // then
+        assertThat(responses).isEmpty();
+    }
+
+    @Test
+    @DisplayName("3초가 되면 모든 입장자에게 같은 시각의 PING을 보낸다")
+    void pingsJoinedPlayers() {
+        // given
+        List<ServerMsg> first = connect(100);
+        join(100, "모카", 0);
+        List<ServerMsg> second = connect(200);
+        join(200, "구름", 1);
+        first.clear();
+        second.clear();
+
+        // when
+        dispatcherLoop.tick(3_000);
+
+        // then
+        assertThat(first).containsExactly(new ServerMsg.Ping(3_000));
+        assertThat(second).containsExactly(new ServerMsg.Ping(3_000));
+    }
+
+    @Test
+    @DisplayName("PING을 보낸 뒤 다시 3초가 되기 전에는 보내지 않는다")
+    void waitsBeforeNextPing() {
+        // given
+        List<ServerMsg> responses = connect(100);
+        join(100, "모카", 0);
+        dispatcherLoop.tick(3_000);
+        responses.clear();
+
+        // when
+        dispatcherLoop.tick(5_999);
+
+        // then
+        assertThat(responses).isEmpty();
+    }
+
+    @Test
+    @DisplayName("다음 3초 주기에는 새 시각의 PING을 보낸다")
+    void sendsNextPing() {
+        // given
+        List<ServerMsg> responses = connect(100);
+        join(100, "모카", 0);
+        dispatcherLoop.tick(3_000);
+        responses.clear();
+
+        // when
+        dispatcherLoop.tick(6_000);
+
+        // then
+        assertThat(responses).containsExactly(new ServerMsg.Ping(6_000));
+    }
+
+    @Test
+    @DisplayName("입장하지 않은 연결에는 PING을 보내지 않는다")
+    void doesNotPingBeforeJoin() {
+        // given
+        List<ServerMsg> responses = connect(100);
+        dispatcherLoop.tick(0);
+
+        // when
+        dispatcherLoop.tick(3_000);
+
+        // then
+        assertThat(responses).isEmpty();
+    }
+
+    @Test
+    @DisplayName("퇴장한 연결에는 PING을 보내지 않는다")
+    void doesNotPingDepartedPlayer() {
+        // given
+        List<ServerMsg> responses = connect(100);
+        join(100, "모카", 0);
+        leave(100);
+        responses.clear();
+
+        // when
+        dispatcherLoop.tick(3_000);
+
+        // then
+        assertThat(responses).isEmpty();
+    }
+
+    @Test
+    @DisplayName("입장한 시각부터 첫 응답을 기다린다")
+    void startsResponseWaitOnJoin() {
+        // given
+        connect(100);
+        sessionManager.receive(100, new ClientMsg.Join("모카", 0));
+
+        // when
+        dispatcherLoop.tick(1_000);
+
+        // then
+        assertThat(dispatcherLoop.lastResponseMillis(100)).isEqualTo(1_000L);
+    }
+
+    @Test
+    @DisplayName("PONG의 전송 시각 대신 서버의 현재 처리 시각을 응답 시각으로 기록한다")
+    void recordsPongProcessingTime() {
+        // given
+        connect(100);
+        join(100, "모카", 0);
+        dispatcherLoop.tick(3_000);
+        sessionManager.receive(100, new ClientMsg.Pong(3_000));
+
+        // when
+        dispatcherLoop.tick(3_100);
+
+        // then
+        assertThat(dispatcherLoop.lastResponseMillis(100)).isEqualTo(3_100L);
+    }
+
+    @Test
+    @DisplayName("PONG을 보낸 참가자의 응답 시각만 갱신한다")
+    void keepsOtherSessionResponseTime() {
+        // given
+        connect(100);
+        join(100, "모카", 0);
+        connect(200);
+        join(200, "구름", 1);
+        dispatcherLoop.tick(3_000);
+        sessionManager.receive(100, new ClientMsg.Pong(3_000));
+
+        // when
+        dispatcherLoop.tick(3_100);
+
+        // then
+        assertThat(dispatcherLoop.lastResponseMillis(200)).isZero();
+    }
+
+    @Test
+    @DisplayName("입장 전 PONG은 응답 기록을 만들지 않는다")
+    void ignoresPongBeforeJoin() {
+        // given
+        connect(100);
+        sessionManager.receive(100, new ClientMsg.Pong(0));
+
+        // when
+        dispatcherLoop.tick(1_000);
+
+        // then
+        assertThat(dispatcherLoop.lastResponseMillis(100)).isNull();
+    }
+
+    @Test
+    @DisplayName("퇴장하면 응답 시각 기록도 제거한다")
+    void removesResponseTimeOnLeave() {
+        // given
+        connect(100);
+        join(100, "모카", 0);
+        sessionManager.leave(100);
+
+        // when
+        dispatcherLoop.tick(1_000);
+
+        // then
+        assertThat(dispatcherLoop.lastResponseMillis(100)).isNull();
+    }
+
+    @Test
+    @DisplayName("퇴장 뒤 늦게 들어온 PONG은 응답 기록을 되살리지 않는다")
+    void ignoresPongAfterLeave() {
+        // given
+        connect(100);
+        join(100, "모카", 0);
+        dispatcherLoop.tick(3_000);
+        sessionManager.leave(100);
+        dispatcherLoop.tick(3_100);
+        sessionManager.receive(100, new ClientMsg.Pong(3_000));
+
+        // when
+        dispatcherLoop.tick(3_200);
+
+        // then
+        assertThat(dispatcherLoop.lastResponseMillis(100)).isNull();
+    }
+
     private List<ServerMsg> connect(long sessionId) {
         List<ServerMsg> responses = new ArrayList<>();
         sessionManager.register(sessionId, new Session(new Socket(), 0L, sessionManager) {
@@ -324,12 +515,12 @@ class DispatcherLoopTest {
 
     private void join(long sessionId, String name, int character) {
         sessionManager.receive(sessionId, new ClientMsg.Join(name, character));
-        dispatcherLoop.tick();
+        dispatcherLoop.tick(0);
     }
 
     private void leave(long sessionId) {
         sessionManager.leave(sessionId);
-        dispatcherLoop.tick();
+        dispatcherLoop.tick(0);
     }
 
     private void move(long sessionId, double x, double y, Direction direction) {
