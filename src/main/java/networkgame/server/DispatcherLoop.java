@@ -177,7 +177,7 @@ public final class DispatcherLoop implements Runnable {
             sessionManager.reject(sessionId, reason);
             return;
         }
-        PlayerInfo player = playerManager.register(sessionId, message.name(), message.character());
+        PlayerInfo player = playerManager.register(sessionId, message.name());
         if (player == null) {
             return;
         }
