@@ -652,6 +652,53 @@ class DispatcherLoopTest {
         assertThat(responses).containsExactly(new ServerMsg.Reject(RejectReason.NAME_TAKEN));
     }
 
+    @Test
+    @DisplayName("입장자의 시작 요청을 모든 참가자에게 알린다")
+    void startsForAll() {
+        // given
+        List<ServerMsg> first = connect(100); join(100, "모카", 0);
+        List<ServerMsg> second = connect(200); join(200, "구름", 0);
+        first.clear(); second.clear();
+
+        // when
+        sessionManager.receive(100, new ClientMsg.StartRequest());
+        dispatcherLoop.tick(0);
+
+        // then
+        assertThat(first).containsExactly(new ServerMsg.Start());
+        assertThat(second).containsExactly(new ServerMsg.Start());
+    }
+
+    @Test
+    @DisplayName("입장하지 않은 연결은 게임을 시작할 수 없다")
+    void ignoresUnjoinedStart() {
+        // given
+        List<ServerMsg> first = connect(100); join(100, "모카", 0);
+        connect(200); first.clear();
+
+        // when
+        sessionManager.receive(200, new ClientMsg.StartRequest());
+        dispatcherLoop.tick(0);
+
+        // then
+        assertThat(first).isEmpty();
+    }
+
+    @Test
+    @DisplayName("시작 요청을 반복해도 START를 다시 보내지 않는다")
+    void startsOnlyOnce() {
+        // given
+        List<ServerMsg> first = connect(100); join(100, "모카", 0);
+        sessionManager.receive(100, new ClientMsg.StartRequest()); dispatcherLoop.tick(0); first.clear();
+
+        // when
+        sessionManager.receive(100, new ClientMsg.StartRequest());
+        dispatcherLoop.tick(0);
+
+        // then
+        assertThat(first).isEmpty();
+    }
+
     private List<ServerMsg> connect(long sessionId) {
         List<ServerMsg> responses = new ArrayList<>();
         sessionManager.register(sessionId, new Session(new Socket(), 0L, sessionManager) {

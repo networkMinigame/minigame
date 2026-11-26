@@ -35,6 +35,10 @@ public sealed interface ClientMsg {
     record Move(double x, double y, Direction direction) implements ClientMsg {
     }
 
+    /** MVP에서 입장자가 즉시 게임 시작을 요청한다. */
+    @JsonTypeName("START_REQUEST")
+    record StartRequest() implements ClientMsg {}
+
     @JsonTypeName("READY")
     record Ready(boolean ready) implements ClientMsg {
     }

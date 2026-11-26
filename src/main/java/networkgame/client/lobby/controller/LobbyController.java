@@ -1,6 +1,7 @@
 package networkgame.client.lobby.controller;
 
 import java.awt.Dimension;
+import java.awt.BorderLayout;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.List;
@@ -48,6 +49,8 @@ public final class LobbyController {
     // 창을 닫았거나 입장 거절·연결 끊김을 처리하기 시작하면 true. 이후 도착한 서버 메시지는 버린다.
     private boolean closing;
     private Timer[] timers;
+    private LobbyView lobby;
+    private final JButton startButton = new JButton("게임 시작");
 
     /**
      * 창은 {@link #show()}를 불러야 뜬다. 내 고양이는 서버가 {@code WELCOME}을 보낸 뒤에 나타난다.
@@ -69,8 +72,14 @@ public final class LobbyController {
      * 창을 닫으면 멈추고 연결을 닫는다.
      */
     public void show() {
-        LobbyView lobby = new LobbyView(state::findAll, assets);
-        configureWindow(lobby);
+        lobby = new LobbyView(state::findAll, assets);
+        JPanel content = new JPanel(new BorderLayout());
+        content.add(lobby, BorderLayout.CENTER);
+        content.add(startButton, BorderLayout.SOUTH);
+        startButton.setEnabled(false);
+        startButton.setFocusable(false);
+        startButton.addActionListener(event -> client.send(new ClientMsg.StartRequest()));
+        configureWindow(content);
         ArrowKeys keys = new ArrowKeys(window);
 
         Timer frameTimer = new Timer(FRAME_MILLIS, event -> updateFrame(keys.pressed(), lobby));
@@ -148,7 +157,10 @@ public final class LobbyController {
     /** 서버 메시지를 EDT에서 로비 상태에 반영한다. 화면은 다음 타이머 프레임에 갱신된다. */
     private void handle(ServerMsg message) {
         switch (message) {
-            case ServerMsg.Welcome(int id, List<PlayerInfo> playerInfos) -> state.welcome(id, playerInfos);
+            case ServerMsg.Welcome(int id, List<PlayerInfo> playerInfos) -> {
+                state.welcome(id, playerInfos);
+                startButton.setEnabled(true);
+            }
             case ServerMsg.Joined(PlayerInfo playerInfo) -> state.save(Player.from(playerInfo));
             case ServerMsg.Left(int id) -> state.removeByPlayerId(id);
             case ServerMsg.Moved(int id, double x, double y, Direction direction) -> state.moveRemote(id, x, y, direction, nowMillis());
@@ -157,12 +169,18 @@ public final class LobbyController {
             // 아래 메시지는 아직 로비에서 처리하지 않는다.
             case ServerMsg.Chat ignored -> {}
             case ServerMsg.ReadyState ignored -> {}
-            case ServerMsg.Start ignored -> {}
+            case ServerMsg.Start ignored -> {
+                startButton.setEnabled(false);
+                startButton.setText("어깨빵 피하기");
+                window.setTitle("미니게임 · 어깨빵 피하기");
+                lobby.showArena();
+            }
         }
     }
 
     private void closeOnReject(RejectReason reason) {
         closing = true;
+        startButton.setEnabled(false);
         stopTimers();
         JOptionPane.showMessageDialog(window, rejectMessage(reason), "입장 거절", JOptionPane.WARNING_MESSAGE);
         window.dispose();
@@ -181,6 +199,7 @@ public final class LobbyController {
             return;
         }
         closing = true;
+        startButton.setEnabled(false);
         stopTimers();
         showReconnectOptions("서버 연결이 끊겼습니다.");
     }
