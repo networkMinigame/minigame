@@ -24,14 +24,14 @@ d.panel(60, 125, 420, 165, "main", "main 스레드 × 1", "연결까지만 하�
 d.lines(84, 182, [
     "① LobbyAssetLoader.load()  그림 읽기",
     "② new Client(host, port)  연결 · TCP_NODELAY",
-    "③ invokeLater(LobbySession.show())  후 종료",
+    "③ invokeLater(LobbyController.show())  후 종료",
     "실패하면 대화상자를 띄우고 끝 (스레드 시작 전)",
 ], size=13, gap=24)
 
 # EDT
 d.panel(60, 330, 590, 470, "edt", "EDT × 1  (Swing 화면 스레드)", "로비 상태는 EDT만 바꾼다")
 d.rect(90, 380, 530, 120, "thread")
-d.text(355, 404, "LobbySession", weight=600)
+d.text(355, 404, "LobbyController", weight=600)
 d.lines(110, 436, [
     "show(): 창 · 타이머 · 방향키 → client.start(콜백) → send(JOIN)",
     "handle(ServerMsg): WELCOME · JOINED를 LobbyState에 반영",
@@ -40,7 +40,7 @@ d.lines(110, 436, [
 d.node(90, 540, 220, 76, "thread", ["Timer", "16ms마다 이동 · 다시 그리기"])
 d.node(90, 640, 220, 76, "thread", ["ArrowKeys", "눌린 방향키 모음"])
 d.node(350, 540, 270, 76, "loop", ["LobbyState", "접속자 목록 · 내 playerId"])
-d.node(350, 640, 270, 76, "thread", ["LobbyPanel", "LobbyState를 읽어 그림"])
+d.node(350, 640, 270, 76, "thread", ["LobbyView", "LobbyState를 읽어 그림"])
 d.arrow([(312, 578), (348, 578)], "make")
 d.arrow([(200, 638), (200, 618)], "make")
 d.arrow([(485, 618), (485, 638)], "make")
@@ -86,7 +86,7 @@ d.rect(1200, 570, 280, 230, "note", r=10)
 d.text(1220, 598, "책임 구분", size=16, weight=700, anchor="start")
 for i, (head, body) in enumerate([
     ("Client", "소켓과 스레드만 안다. Swing은 모름"),
-    ("LobbySession", "메시지를 EDT로 넘겨 반영, 창 닫으면 연결 닫기"),
+    ("LobbyController", "메시지를 EDT로 넘겨 반영, 창 닫으면 연결 닫기"),
     ("LobbyState", "EDT 전용이라 락 없음"),
     ("main", "연결해서 넘기고 닫지 않음"),
 ]):

@@ -1,4 +1,4 @@
-package networkgame.client.contentpane.lobby;
+package networkgame.client.lobby.model;
 
 import networkgame.protocol.Direction;
 import networkgame.protocol.PlayerInfo;
@@ -13,12 +13,15 @@ import networkgame.protocol.PlayerInfo;
  * @param direction 바라보는 방향. 멈춘 뒤에도 마지막 방향을 유지한다
  * @param walking   {@code true}면 걷기 프레임을 돌려 그린다. 프로토콜에는 없는 값이라 클라이언트가 정한다
  */
-record Player(int playerId,
+public record Player(int playerId,
               String name,
               int character,
               double x, double y,
               Direction direction,
               boolean walking) {
+
+    /** 고양이가 지도에서 차지하는 한 변 길이(지도 px). 이동 범위 계산과 화면 그리기가 같은 값을 쓴다. */
+    public static final int CAT_SIZE = 104;
 
     /**
      * 좌표와 방향만 바꾼 플레이어를 돌려준다.
@@ -42,7 +45,7 @@ record Player(int playerId,
      * @param playerInfo 플레이어 정보 walking 정보만 빼고 Player와 동일합니다.
      * @return Player(walking = false)
      */
-    static Player from(PlayerInfo playerInfo) {
+    public static Player from(PlayerInfo playerInfo) {
         return new Player(
                 playerInfo.id(),
                 playerInfo.name(),

@@ -1,6 +1,5 @@
-package networkgame.client.handler;
+package networkgame.client.network;
 
-import networkgame.client.Client;
 import networkgame.protocol.ServerMsg;
 import networkgame.protocol.ClientMsg;
 import networkgame.util.Utf8LineReader;
@@ -13,19 +12,33 @@ import java.util.function.Consumer;
 import static networkgame.protocol.MessageCodec.decodeServer;
 import static networkgame.util.Log.log;
 
-public class ReadHandler extends ClientHandler {
+class ReadHandler implements Runnable {
 
+    private final Client client;
+    private final Socket socket;
     // 외부로부터 작업을 전달받아 단순히 값을 받고 읽습니다.
     private final Consumer<ServerMsg> onMessage;
 
-    public ReadHandler(Client client, Socket socket, Consumer<ServerMsg> onMessage) {
-        super(client, socket);
+    ReadHandler(Client client, Socket socket, Consumer<ServerMsg> onMessage) {
+        this.client = client;
+        this.socket = socket;
         this.onMessage = onMessage;
     }
 
-    /** PING은 Reader에서 전송 큐로 응답하고, 다른 메시지는 화면 쪽 콜백으로 전달한다. */
+    // 읽다가 끊기든 서버가 닫든 끝나면 연결을 닫는다.
     @Override
-    protected void handle() throws IOException {
+    public void run() {
+        try {
+            handle();
+        } catch (IOException e) {
+            log("연결 끊김 " + e.getMessage());
+        } finally {
+            client.close();
+        }
+    }
+
+    /** PING은 Reader에서 전송 큐로 응답하고, 다른 메시지는 화면 쪽 콜백으로 전달한다. */
+    private void handle() throws IOException {
         Utf8LineReader in = new Utf8LineReader(socket.getInputStream());
 
         String inputMessage;

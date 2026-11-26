@@ -21,7 +21,7 @@
 <text x="740.0" y="185.0" font-size="13" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">JSON → ServerMsg</text>
 <rect x="880" y="135" width="200" height="80" rx="8" fill="#ffffff" stroke="#0969da" stroke-width="1.6"/>
 <text x="980.0" y="165.0" font-size="15" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">onMessage.accept()</text>
-<text x="980.0" y="185.0" font-size="13" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">LobbySession이 준 콜백</text>
+<text x="980.0" y="185.0" font-size="13" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">LobbyController가 준 콜백</text>
 <rect x="1120" y="135" width="200" height="80" rx="8" fill="#fff8c5" stroke="#bf8700" stroke-width="1.6"/>
 <text x="1220.0" y="165.0" font-size="15" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">invokeLater</text>
 <text x="1220.0" y="185.0" font-size="13" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">EDT 이벤트 큐에 넣기</text>
@@ -59,7 +59,7 @@
 <text x="480.0" y="360.0" font-size="13" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">moveLocalPlayer()</text>
 <path d="M 582 350 L 618 350" fill="none" stroke="#8c959f" stroke-width="1.8" marker-end="url(#arrow-make)"/>
 <rect x="200" y="310" width="140" height="80" rx="8" fill="#ffffff" stroke="#0969da" stroke-width="1.6"/>
-<text x="270.0" y="340.0" font-size="15" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">LobbyPanel</text>
+<text x="270.0" y="340.0" font-size="15" font-weight="600" text-anchor="middle" dominant-baseline="middle" fill="#1f2328">LobbyView</text>
 <text x="270.0" y="360.0" font-size="13" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">다시 그림</text>
 <path d="M 378 350 L 342 350" fill="none" stroke="#8c959f" stroke-width="1.8" marker-end="url(#arrow-make)"/>
 <text x="480" y="414" font-size="12" font-weight="400" text-anchor="middle" dominant-baseline="middle" fill="#57606a">WELCOME 전에는 내 플레이어가 없어서 이동을 건너뜀</text>

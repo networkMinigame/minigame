@@ -1,5 +1,6 @@
-package networkgame.client.contentpane.lobby;
+package networkgame.client.lobby.controller;
 
+import networkgame.client.lobby.model.Player;
 import networkgame.protocol.ClientMsg;
 import networkgame.protocol.Direction;
 import org.junit.jupiter.api.DisplayName;
@@ -45,7 +46,7 @@ class MoveSenderTest {
         sent.clear();
 
         // when
-        moveSender.sendIfChanged(player.stop());
+        moveSender.sendIfChanged(new Player(0, "모카", 0, 300, 400, Direction.DOWN, false));
 
         // then
         assertThat(sent).isEmpty();
@@ -60,7 +61,7 @@ class MoveSenderTest {
         sent.clear();
 
         // when
-        moveSender.sendIfChanged(player.moveTo(300, 400, Direction.LEFT));
+        moveSender.sendIfChanged(new Player(0, "모카", 0, 300, 400, Direction.LEFT, false));
 
         // then
         assertThat(sent).containsExactly(new ClientMsg.Move(300, 400, Direction.LEFT));

@@ -27,7 +27,7 @@
 - **로비 상태와 화면을 바꾸는 건 EDT뿐.** Reader는 직접 고치지 않고 `invokeLater`로 넘긴다. 그래서 `LobbyState`에 락이 없다
 - **EDT에서 소켓을 다루지 않는다.** 연결은 `main`에서, 쓰기는 Writer에서, 읽기는 Reader에서 한다. EDT가 기다리면 화면이 멈춘다
 - **`Client`는 Swing을 모른다.** 받은 메시지를 어디로 넘길지는 `client.start(콜백)`을 부르는 화면 쪽이 정한다
-- **연결은 넘겨받은 쪽이 닫는다.** `main`은 만들어 넘기기만 하고, 창을 닫을 때 `LobbySession`이 `close()`를 부른다
+- **연결은 넘겨받은 쪽이 닫는다.** `main`은 만들어 넘기기만 하고, 창을 닫을 때 `LobbyController`이 `close()`를 부른다
 
 ## 다시 그리기
 

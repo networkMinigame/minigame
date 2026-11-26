@@ -1,4 +1,4 @@
-package networkgame.client.contentpane.lobby.assets;
+package networkgame.client.lobby.view.assets;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;

@@ -1,4 +1,4 @@
-package networkgame.client;
+package networkgame.client.network;
 
 import networkgame.protocol.ClientMsg;
 import networkgame.protocol.MessageCodec;

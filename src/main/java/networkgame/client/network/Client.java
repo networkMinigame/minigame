@@ -1,7 +1,5 @@
-package networkgame.client;
+package networkgame.client.network;
 
-import networkgame.client.handler.ReadHandler;
-import networkgame.client.handler.WriteHandler;
 import networkgame.protocol.ClientMsg;
 import networkgame.protocol.ServerMsg;
 

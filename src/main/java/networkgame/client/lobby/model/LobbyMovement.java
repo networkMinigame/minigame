@@ -1,4 +1,4 @@
-package networkgame.client.contentpane.lobby;
+package networkgame.client.lobby.model;
 
 import networkgame.protocol.Direction;
 
@@ -8,7 +8,7 @@ import java.util.Set;
  * 눌린 방향키로 한 프레임 뒤 내 고양이의 위치·방향을 계산한다.
  * <p>Swing·{@link LobbyState}를 모르는 순수 계산이라 창 없이 테스트할 수 있다.
  */
-final class LobbyMovement {
+public final class LobbyMovement {
     // 한 프레임(16ms)에 움직이는 거리, 지도 픽셀 단위라 초당 약 300px이다.
     static final double STEP = 5;
 
@@ -24,8 +24,8 @@ final class LobbyMovement {
      * @param mapWidth  지도 그림의 너비(px)
      * @param mapHeight 지도 그림의 높이(px)
      */
-    LobbyMovement(int mapWidth, int mapHeight) {
-        int size = LobbyStyle.SPRITE_SIZE;
+    public LobbyMovement(int mapWidth, int mapHeight) {
+        int size = Player.CAT_SIZE;
         this.minX = size / 2.0;
         this.maxX = mapWidth - size / 2.0;
         this.minY = size + 32;
@@ -40,7 +40,7 @@ final class LobbyMovement {
      * @param pressed 지금 눌려 있는 방향키
      * @return 한 프레임 뒤의 플레이어. 바뀐 게 없으면 {@code player}와 같은 값
      */
-    Player next(Player player, Set<Direction> pressed) {
+    public Player next(Player player, Set<Direction> pressed) {
         Offset offset = Offset.of(pressed);
         if (offset.isZero()) {
             return player.stop();

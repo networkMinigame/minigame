@@ -30,7 +30,7 @@ d.node(50, 315, 130, 60, "edt", ["EDT"])
 d.node(200, 135, 180, 80, "thread", ["readLine()", "한 줄 읽기"])
 d.node(420, 135, 180, 80, "thread", ["빈 줄?", "그러면 건너뜀"])
 d.node(640, 135, 200, 80, "thread", ["decodeServer(line)", "JSON → ServerMsg"])
-d.node(880, 135, 200, 80, "thread", ["onMessage.accept()", "LobbySession이 준 콜백"])
+d.node(880, 135, 200, 80, "thread", ["onMessage.accept()", "LobbyController가 준 콜백"])
 d.node(1120, 135, 200, 80, "queue", ["invokeLater", "EDT 이벤트 큐에 넣기"])
 chip(620, 226, 240, 30, "close", "JacksonException → 로그만 남기고 다음 줄")
 for x1, x2 in ((382, 418), (602, 638), (842, 878), (1082, 1118)):
@@ -52,7 +52,7 @@ d.arrow([(858, 350), (822, 350)], "recv")
 
 d.node(380, 310, 200, 80, "thread", ["Timer 16ms", "moveLocalPlayer()"])
 d.arrow([(582, 350), (618, 350)], "make")
-d.node(200, 310, 140, 80, "thread", ["LobbyPanel", "다시 그림"])
+d.node(200, 310, 140, 80, "thread", ["LobbyView", "다시 그림"])
 d.arrow([(378, 350), (342, 350)], "make")
 d.text(480, 414, "WELCOME 전에는 내 플레이어가 없어서 이동을 건너뜀", size=12, weight=400, color="#57606a")
 
