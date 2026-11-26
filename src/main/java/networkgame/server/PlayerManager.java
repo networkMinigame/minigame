@@ -12,6 +12,11 @@ final class PlayerManager {
     private static final int SPAWN_Y = 470;
     private static final int SPAWN_SPACING = 120;
 
+    private static final double MIN_X = 52;
+    private static final double MAX_X = 1620;
+    private static final double MIN_Y = 136;
+    private static final double MAX_Y = 941;
+
     private final Map<Long, PlayerInfo> players = new LinkedHashMap<>();
 
     private final Set<Long> movedSessionIds = new LinkedHashSet<>();
@@ -49,8 +54,8 @@ final class PlayerManager {
                 playerInfo.id(),
                 playerInfo.name(),
                 playerInfo.character(),
-                x,
-                y,
+                Math.clamp(x, MIN_X, MAX_X),
+                Math.clamp(y, MIN_Y, MAX_Y),
                 direction
         );
         if (movePlayerInfo.equals(playerInfo)) {
