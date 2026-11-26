@@ -3,12 +3,9 @@ package networkgame.client.lobby.controller;
 import java.awt.Dimension;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.util.concurrent.ExecutionException;
-import static networkgame.util.Log.log;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import javax.swing.*;
 
 import networkgame.client.network.Client;
@@ -21,7 +18,10 @@ import networkgame.client.input.ArrowKeys;
 import networkgame.protocol.ClientMsg;
 import networkgame.protocol.Direction;
 import networkgame.protocol.PlayerInfo;
+import networkgame.protocol.RejectReason;
 import networkgame.protocol.ServerMsg;
+
+import static networkgame.util.Log.log;
 
 /**
  * 로비 창 하나를 띄우고, 정해진 주기마다 내 고양이를 옮기고 다시 그린다.
@@ -41,27 +41,23 @@ public final class LobbyController {
     private final LobbyMovement movement;
     private final Client client;
     private final ClientMsg.Join join;
-
     private final MoveSender moveSender;
+
+    // 창을 닫았거나 입장 거절·연결 끊김을 처리하기 시작하면 true. 이후 도착한 서버 메시지는 버린다.
     private boolean closing;
     private Timer[] timers;
 
     /**
      * 창은 {@link #show()}를 불러야 뜬다. 내 고양이는 서버가 {@code WELCOME}을 보낸 뒤에 나타난다.
      *
-     * @param client    연결은 됐지만 아직 {@link Client#start}를 부르지 않은 클라이언트. 창을 닫으면 이 세션이 닫는다
+     * @param client    연결은 됐지만 아직 {@link Client#start}를 부르지 않은 클라이언트. 창을 닫으면 이 컨트롤러가 닫는다
      * @param character 고양이 번호. 0 이상, 고양이 수 미만
      */
     public LobbyController(LobbyAssets assets, Client client, String name, int character) {
         this.assets = assets;
         this.client = client;
-
-        int mapWidth = assets.map().getWidth();
-        int mapHeight = assets.map().getHeight();
-        this.movement = new LobbyMovement(mapWidth, mapHeight);
-
-        join = new ClientMsg.Join(name, character);
-
+        this.movement = new LobbyMovement(assets.map().getWidth(), assets.map().getHeight());
+        this.join = new ClientMsg.Join(name, character);
         this.moveSender = new MoveSender(client::send);
     }
 
@@ -74,65 +70,17 @@ public final class LobbyController {
         configureWindow(lobby);
         ArrowKeys keys = new ArrowKeys(window);
 
-        // 16ms마다 EDT에서 눌린 방향키에 따라 고양이 위치를 갱신하고 화면을 다시 그리도록 요청합니다.
-        Timer frameTimer = new Timer(FRAME_MILLIS, event -> {
-            moveLocalPlayer(keys.pressed());
-            state.stopIdleRemotePlayers(nowMillis());
-            lobby.renderFrame();
-        });
+        Timer frameTimer = new Timer(FRAME_MILLIS, event -> updateFrame(keys.pressed(), lobby));
         Timer moveSendTimer = new Timer(MOVED_SEND_MILLIS, event -> sendLocalMove());
-
         timers = new Timer[] {frameTimer, moveSendTimer};
-        stopOnClose(frameTimer, moveSendTimer);
-        window.setVisible(true);
+        stopOnClose();
 
+        window.setVisible(true);
         frameTimer.start();
         moveSendTimer.start();
 
-        client.start(message ->
-                SwingUtilities.invokeLater(
-                        () -> {
-                            if (!closing) {
-                                handle(message);
-                            }
-                        }),
-                () -> SwingUtilities.invokeLater(this::connectionLost));
-        client.send(join);
+        connectToServer();
     }
-
-    private static long nowMillis() {
-        return System.nanoTime() / 1_000_000;
-    }
-
-    /** 서버 메시지를 EDT에서 로비 상태에 반영한다. 화면은 다음 타이머 프레임에 갱신된다. */
-    private void handle(ServerMsg message) {
-        switch (message) {
-            case ServerMsg.Welcome(int id, List<PlayerInfo> playerInfos) -> {
-                state.welcome(id, playerInfos);
-            }
-            case ServerMsg.Joined(PlayerInfo playerInfo) -> {
-                state.save(Player.from(playerInfo));
-            }
-            case ServerMsg.Left(int id) -> state.removeByPlayerId(id);
-            // 아래 메시지는 #35 ~ 38에서 처리합니다.
-            case ServerMsg.Moved(int id, double x, double y, Direction direction) -> state.moveRemote(id, x, y, direction, nowMillis());
-            case ServerMsg.Reject reject -> {
-                closing = true;
-                stopTimers();
-                String reason = switch (reject.reason()) {
-                    case FULL -> "로비 정원이 가득 찼습니다.";
-                    case NAME_TAKEN -> "이미 사용 중인 이름입니다. 이름을 변경한 뒤 다시 접속해 주세요.";
-                };
-                JOptionPane.showMessageDialog(window, reason, "입장 거절", JOptionPane.WARNING_MESSAGE);
-                window.dispose();
-            }
-            case ServerMsg.Ping ignored -> {} // Reader에서 PONG 응답을 처리한다.
-            case ServerMsg.Chat ignored -> {}
-            case ServerMsg.ReadyState ignored -> {}
-            case ServerMsg.Start ignored -> {}
-        }
-    }
-
 
     // pack()은 내용이 들어간 뒤에, 가운데 놓기는 pack()으로 크기가 정해진 뒤에 해야 해서 이 순서를 지킨다.
     private void configureWindow(JPanel content) {
@@ -144,7 +92,7 @@ public final class LobbyController {
         window.setLocationRelativeTo(null);
     }
 
-    private void stopOnClose(Timer ...timers) {
+    private void stopOnClose() {
         window.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosed(WindowEvent event) {
@@ -154,6 +102,74 @@ public final class LobbyController {
             }
         });
     }
+
+    // 메시지와 연결 끊김 알림은 Reader 스레드에서 오므로 EDT로 넘긴다. JOIN은 Reader·Writer를 띄운 뒤 보낸다.
+    private void connectToServer() {
+        client.start(
+                message -> SwingUtilities.invokeLater(() -> handleIfOpen(message)),
+                () -> SwingUtilities.invokeLater(this::connectionLost));
+        client.send(join);
+    }
+
+    // 내 고양이를 옮기고, MOVED가 끊긴 다른 고양이를 멈춘 뒤 다시 그려 달라고 요청한다.
+    private void updateFrame(Set<Direction> pressed, LobbyView lobby) {
+        moveLocalPlayer(pressed);
+        state.stopIdleRemotePlayers(nowMillis());
+        lobby.renderFrame();
+    }
+
+    private void moveLocalPlayer(Set<Direction> pressed) {
+        Player player = state.findLocalPlayer();
+        // WELCOME을 받기 전에는 내 플레이어가 없다.
+        if (player == null) {
+            return;
+        }
+        state.save(movement.next(player, pressed));
+    }
+
+    private void sendLocalMove() {
+        Player localPlayer = state.findLocalPlayer();
+        if (localPlayer != null) {
+            moveSender.sendIfChanged(localPlayer);
+        }
+    }
+
+    private void handleIfOpen(ServerMsg message) {
+        if (!closing) {
+            handle(message);
+        }
+    }
+
+    /** 서버 메시지를 EDT에서 로비 상태에 반영한다. 화면은 다음 타이머 프레임에 갱신된다. */
+    private void handle(ServerMsg message) {
+        switch (message) {
+            case ServerMsg.Welcome(int id, List<PlayerInfo> playerInfos) -> state.welcome(id, playerInfos);
+            case ServerMsg.Joined(PlayerInfo playerInfo) -> state.save(Player.from(playerInfo));
+            case ServerMsg.Left(int id) -> state.removeByPlayerId(id);
+            case ServerMsg.Moved(int id, double x, double y, Direction direction) -> state.moveRemote(id, x, y, direction, nowMillis());
+            case ServerMsg.Reject(RejectReason reason) -> closeOnReject(reason);
+            case ServerMsg.Ping ignored -> {} // Reader에서 PONG 응답을 처리한다.
+            // 아래 메시지는 아직 로비에서 처리하지 않는다.
+            case ServerMsg.Chat ignored -> {}
+            case ServerMsg.ReadyState ignored -> {}
+            case ServerMsg.Start ignored -> {}
+        }
+    }
+
+    private void closeOnReject(RejectReason reason) {
+        closing = true;
+        stopTimers();
+        JOptionPane.showMessageDialog(window, rejectMessage(reason), "입장 거절", JOptionPane.WARNING_MESSAGE);
+        window.dispose();
+    }
+
+    private static String rejectMessage(RejectReason reason) {
+        return switch (reason) {
+            case FULL -> "로비 정원이 가득 찼습니다.";
+            case NAME_TAKEN -> "이미 사용 중인 이름입니다. 이름을 변경한 뒤 다시 접속해 주세요.";
+        };
+    }
+
     /** 로컬 종료와 입장 거절은 안내를 생략하고, 예기치 않은 종료에만 선택지를 표시한다. */
     private void connectionLost() {
         if (closing || !window.isDisplayable()) {
@@ -218,20 +234,7 @@ public final class LobbyController {
         }
     }
 
-    private void moveLocalPlayer(Set<Direction> pressed) {
-        Player player = state.findLocalPlayer();
-        // 1. JOIN > WELCOME > JOINED 까지 수신하고도
-        // 고양이가 화면에 나오지 않는 에려가 있었습니다. moveLocalPlayer에 null 검사를 도입하엿습니다.
-        if (player == null) {
-            return;
-        }
-        state.save(movement.next(player, pressed));
-    }
-
-    private void sendLocalMove() {
-        Player localPlayer = state.findLocalPlayer();
-        if (localPlayer != null) {
-            moveSender.sendIfChanged(localPlayer);
-        }
+    private static long nowMillis() {
+        return System.nanoTime() / 1_000_000;
     }
 }
