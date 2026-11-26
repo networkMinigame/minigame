@@ -22,6 +22,17 @@ JDK를 따로 맞출 필요는 없습니다. JDK 25가 없으면 첫 빌드 때 
 ./gradlew build         # 빌드 (build/libs/*.jar)
 ```
 
+같은 빌드로 여러 클라이언트를 실행할 때는 첫 실행 인자로 서로 다른 이름을 지정하세요.
+
+```bash
+./gradlew run --args="모카"
+./gradlew run --args="구름"
+```
+
+IntelliJ에서는 ClientMain 실행 설정의 Program arguments에 이름을 입력합니다.
+이름을 생략하거나 공백으로 주면 ClientMain의 기본 이름을 사용합니다.
+동일 이름으로 접속하면 서버가 입장을 거절합니다.
+
 ## 배포 서버
 
 클라우드에 띄운 서버의 공인 IP는 `129.203.160.45`입니다. 포트는 `ServerMain`의 `PORT`를 따릅니다.
