@@ -2,6 +2,7 @@ package networkgame.client;
 
 import com.formdev.flatlaf.FlatLightLaf;
 import java.io.IOException;
+import static networkgame.util.Log.log;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
@@ -32,7 +33,8 @@ public class ClientMain {
         try {
             client = new Client(HOST, PORT);
         } catch (IOException e) {
-            showError("서버 연결 실패", HOST + ":" + PORT + "\n" + e.getMessage());
+            log("서버 연결 실패 " + HOST + ":" + PORT + " " + e);
+            showError("서버 연결", "연결 실패");
             return;
         }
 

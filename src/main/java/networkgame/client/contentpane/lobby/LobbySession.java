@@ -3,6 +3,8 @@ package networkgame.client.contentpane.lobby;
 import java.awt.Dimension;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.concurrent.ExecutionException;
+import static networkgame.util.Log.log;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +39,8 @@ public final class LobbySession {
     private final ClientMsg.Join join;
 
     private final MoveSender moveSender;
+    private boolean closing;
+    private Timer[] timers;
 
     /**
      * 창은 {@link #show()}를 불러야 뜬다. 내 고양이는 서버가 {@code WELCOME}을 보낸 뒤에 나타난다.
@@ -74,6 +78,7 @@ public final class LobbySession {
         });
         Timer moveSendTimer = new Timer(MOVED_SEND_MILLIS, event -> sendLocalMove());
 
+        timers = new Timer[] {frameTimer, moveSendTimer};
         stopOnClose(frameTimer, moveSendTimer);
         window.setVisible(true);
 
@@ -82,7 +87,12 @@ public final class LobbySession {
 
         client.start(message ->
                 SwingUtilities.invokeLater(
-                        () -> handle(message)));
+                        () -> {
+                            if (!closing) {
+                                handle(message);
+                            }
+                        }),
+                () -> SwingUtilities.invokeLater(this::connectionLost));
         client.send(join);
     }
 
@@ -103,6 +113,8 @@ public final class LobbySession {
             // 아래 메시지는 #35 ~ 38에서 처리합니다.
             case ServerMsg.Moved(int id, double x, double y, Direction direction) -> state.moveRemote(id, x, y, direction, nowMillis());
             case ServerMsg.Reject reject -> {
+                closing = true;
+                stopTimers();
                 String reason = switch (reject.reason()) {
                     case FULL -> "로비 정원이 가득 찼습니다.";
                     case NAME_TAKEN -> "이미 사용 중인 이름입니다. 이름을 변경한 뒤 다시 접속해 주세요.";
@@ -132,13 +144,76 @@ public final class LobbySession {
         window.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosed(WindowEvent event) {
-                for (Timer timer : timers) {
-                    timer.stop();
-                }
+                closing = true;
+                stopTimers();
                 client.close();
             }
         });
     }
+    /** 로컬 종료와 입장 거절은 안내를 생략하고, 예기치 않은 종료에만 선택지를 표시한다. */
+    private void connectionLost() {
+        if (closing || !window.isDisplayable()) {
+            return;
+        }
+        closing = true;
+        stopTimers();
+        showReconnectOptions("서버 연결이 끊겼습니다.");
+    }
+
+    /** EDT에서 확인 또는 재연결을 선택한다. 실패 상세 내용은 로그에만 남긴다. */
+    private void showReconnectOptions(String message) {
+        Object[] options = {"확인", "재연결 시도"};
+        int selected = JOptionPane.showOptionDialog(window, message, "서버 연결",
+                JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
+                null, options, options[0]);
+        if (selected == 1 && window.isDisplayable()) {
+            reconnect();
+        } else {
+            window.dispose();
+        }
+    }
+
+    /** 소켓 연결은 작업 스레드에서 실행하고 새 로비 창 생성은 EDT에서 수행한다. */
+    private void reconnect() {
+        new SwingWorker<Client, Void>() {
+            @Override
+            protected Client doInBackground() throws Exception {
+                return client.reconnect();
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    Client reconnected = get();
+                    if (!window.isDisplayable()) {
+                        reconnected.close();
+                        return;
+                    }
+                    new LobbySession(assets, reconnected, join.name(), join.character()).show();
+                    window.dispose();
+                } catch (InterruptedException error) {
+                    Thread.currentThread().interrupt();
+                    log("재연결 실패 " + error);
+                    showReconnectOptions("연결 실패");
+                } catch (ExecutionException error) {
+                    log("재연결 실패 " + error.getCause());
+                    if (window.isDisplayable()) {
+                        showReconnectOptions("연결 실패");
+                    }
+                }
+            }
+        }.execute();
+    }
+
+    /** 연결 종료 후 이동 전송과 화면 갱신을 중단한다. */
+    private void stopTimers() {
+        if (timers != null) {
+            for (Timer timer : timers) {
+                timer.stop();
+            }
+        }
+    }
+
     private void moveLocalPlayer(Set<Direction> pressed) {
         Player player = state.findLocalPlayer();
         // 1. JOIN > WELCOME > JOINED 까지 수신하고도
