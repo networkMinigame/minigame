@@ -12,6 +12,8 @@ final class PlayerManager {
     private static final int SPAWN_Y = 470;
     private static final int SPAWN_SPACING = 120;
 
+    // 클라이언트 LobbyMovement와 같은 범위. 지도 map/lobby.png(1672x941)와 고양이 그림 크기(104px)로 계산한 값이다.
+    // 좌우는 그림 반 폭(52)만큼 안쪽, 위는 그림 높이와 이름표(104 + 32)만큼 아래까지다.
     private static final double MIN_X = 52;
     private static final double MAX_X = 1620;
     private static final double MIN_Y = 136;
