@@ -32,7 +32,9 @@ public final class LobbyAssetLoader {
         for (int character = 0; character < CAT_COUNT; character++) {
             catSprites.add(loadCat(character));
         }
-        return new LobbyAssets(ResourceImages.read(MAP), catSprites);
+        LobbyAssets assets = new LobbyAssets(ResourceImages.read(MAP), catSprites);
+        assets.setArena(ResourceImages.read("map/shoulder-bash-arena-grass-v4.png"));
+        return assets;
     }
 
     private static CatSprites loadCat(int character) throws IOException {

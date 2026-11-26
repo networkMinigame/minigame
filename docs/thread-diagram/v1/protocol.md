@@ -95,6 +95,7 @@ sequenceDiagram
 | | `PONG` | t (받은 PING 값 그대로) |
 | | `MOVE` | x, y, direction (로비 위치와 바라보는 방향) |
 | | `READY` | ready |
+| | `START_REQUEST` | 없음 (MVP: 입장자의 즉시 시작 요청) |
 | 서버 → 클라 | `WELCOME` | id (받는 사람의 playerId), players (본인 포함 접속자의 id·name·character·x·y·direction) |
 | | `REJECT` | reason (`FULL`, `NAME_TAKEN`) |
 | | `JOINED` | player (`WELCOME`의 players 한 칸과 같은 모양) |
@@ -117,3 +118,16 @@ sequenceDiagram
 | 응답 없음 판정 | 10초 |
 | 최대 인원 | 4명 |
 | 채팅 길이 | 200자 (`readLine()`은 줄 끝까지 무제한으로 읽으므로 서버에서 자름) |
+
+
+## MVP 게임 시작 (#38)
+
+현재 MVP는 전원 준비 대신 입장자 한 명의 게임 시작 버튼으로 시작한다.
+클라이언트가 START_REQUEST를 sendQueue에 넣으면 DispatcherLoop가 입장 여부를 검사하고
+모든 입장자에게 START를 한 번 보낸다. 시작 뒤 입장자도 WELCOME 다음 START를 받는다.
+클라이언트 EDT는 START 수신 시 경기장 배경과 창 제목을 어깨빵 피하기로 전환한다.
+경기장 그림은 main에서 로비 에셋과 함께 미리 읽으며 EDT에서 파일을 읽지 않는다.
+
+이 단계는 경기장 진입과 기존 이동 동기화 연결까지다.
+강아지 돌진, 충돌, 목숨, 탈락·승패 판정은 아직 구현하지 않았다.
+전원 준비·최소 2명·READY_STATE는 기존 #38의 원안이며 이번 MVP에서는 적용하지 않는다.

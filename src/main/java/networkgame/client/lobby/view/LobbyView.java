@@ -38,6 +38,7 @@ public final class LobbyView extends JPanel {
     private final Supplier<List<Player>> players;
     private final LobbyAssets assets;
     private long animationTick;
+    private boolean arena;
 
     public LobbyView(Supplier<List<Player>> players, LobbyAssets assets) {
         this.players = players;
@@ -52,13 +53,20 @@ public final class LobbyView extends JPanel {
         repaint();
     }
 
+    /** 좌표계는 유지하고 배경을 어깨빵 경기장으로 전환한다. EDT에서 호출한다. */
+    public void showArena() {
+        arena = true;
+        repaint();
+    }
+
     @Override
     protected void paintComponent(Graphics graphics) {
         super.paintComponent(graphics);
         Graphics2D canvas = (Graphics2D) graphics.create();
         try {
             fitMapToPanel(canvas);
-            canvas.drawImage(assets.map(), 0, 0, null);
+            canvas.drawImage(arena ? assets.arena() : assets.map(), 0, 0,
+                    assets.map().getWidth(), assets.map().getHeight(), null);
             drawPlayers(canvas);
         } finally {
             canvas.dispose();

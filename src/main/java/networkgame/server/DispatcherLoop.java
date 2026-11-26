@@ -25,6 +25,7 @@ public final class DispatcherLoop implements Runnable {
     private final PlayerManager playerManager = new PlayerManager();
     private final SessionManager sessionManager;
     private Long lastPingMillis;
+    private boolean started;
     private final Set<Long> rejectedSessions = new HashSet<>();
     // DispatcherLoop 스레드만 접근한다. JOIN 시각을 첫 응답 대기의 기준으로 사용한다.
     private final Map<Long, Long> lastResponseMillisBySession = new HashMap<>();
@@ -143,6 +144,7 @@ public final class DispatcherLoop implements Runnable {
                     move.y(),
                     move.direction()
             );
+            case ClientMsg.StartRequest ignored -> startGame(sessionId);
             case ClientMsg.Ready ignored -> {}
             case ClientMsg.Chat ignored -> {}
             case ClientMsg.Pong ignored -> recordPong(sessionId, nowMillis);
@@ -184,11 +186,25 @@ public final class DispatcherLoop implements Runnable {
 
         lastResponseMillisBySession.put(sessionId, nowMillis);
         sessionManager.send(sessionId, new ServerMsg.Welcome(player.id(), playerManager.players()));
+        if (started) {
+            sessionManager.send(sessionId, new ServerMsg.Start());
+        }
         var joined = new ServerMsg.Joined(player);
         for (long recipient : playerManager.sessionIds()) {
             if (recipient != sessionId) {
                 sessionManager.send(recipient, joined);
             }
+        }
+    }
+
+    /** 입장자의 첫 시작 요청을 승인하고 모든 입장자에게 한 번만 START를 보낸다. */
+    private void startGame(long sessionId) {
+        if (started || !playerManager.sessionIds().contains(sessionId)) {
+            return;
+        }
+        started = true;
+        for (long recipient : playerManager.sessionIds()) {
+            sessionManager.send(recipient, new ServerMsg.Start());
         }
     }
 
