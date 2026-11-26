@@ -6,6 +6,8 @@ import networkgame.protocol.ServerMsg;
 
 import networkgame.server.SessionManager.Event;
 
+import java.util.Map;
+
 /** 한 스레드에서 로비 요청을 처리하고 세션별 응답을 보낸다. */
 public final class DispatcherLoop implements Runnable {
     private static final long TICK_MILLIS = 33;
@@ -46,13 +48,19 @@ public final class DispatcherLoop implements Runnable {
                 }
             }
         }
+        broadcastMoves();
     }
 
     /** 현재 지원하는 입장 메시지를 처리한다. 다른 메시지는 후속 기능에서 처리한다. */
     private void handle(long sessionId, ClientMsg message) {
         switch (message) {
             case ClientMsg.Join join -> join(sessionId, join);
-            case ClientMsg.Move ignored -> {}
+            case ClientMsg.Move move -> playerManager.move(
+                    sessionId,
+                    move.x(),
+                    move.y(),
+                    move.direction()
+            );
             case ClientMsg.Ready ignored -> {}
             case ClientMsg.Chat ignored -> {}
             case ClientMsg.Pong ignored -> {}
@@ -74,4 +82,26 @@ public final class DispatcherLoop implements Runnable {
             }
         }
     }
+
+    private void broadcastMoves() {
+        Map<Long, PlayerInfo> movedPlayerInfos = playerManager.movedPlayerInfos();
+
+        for (long sessionId : movedPlayerInfos.keySet()) {
+            PlayerInfo playerInfo = movedPlayerInfos.get(sessionId);
+            ServerMsg.Moved moved = new ServerMsg.Moved(
+                    playerInfo.id(),
+                    playerInfo.x(),
+                    playerInfo.y(),
+                    playerInfo.direction()
+            );
+            for (Long receiveSessionId : playerManager.sessionIds()) {
+                if (receiveSessionId != sessionId) {
+                    sessionManager.send(receiveSessionId, moved);
+                }
+            }
+        }
+        playerManager.clearMoved();
+    }
+
+
 }
