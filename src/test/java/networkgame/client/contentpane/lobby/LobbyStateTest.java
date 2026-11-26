@@ -2,6 +2,8 @@ package networkgame.client.contentpane.lobby;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.List;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -129,5 +131,66 @@ class LobbyStateTest {
                 new Player(0, "모카", 2, 836, 470, Direction.DOWN, false),
                 new Player(1, "구름", 0, 956, 470, Direction.DOWN, false));
         assertThat(state.findLocalPlayer()).isEqualTo(new Player(1, "구름", 0, 956, 470, Direction.DOWN, false));
+    }
+
+    @Test
+    @DisplayName("다른 플레이어의 MOVED를 받으면 그 위치와 방향으로 걷는다")
+    void movesRemotePlayer() {
+        // given
+        LobbyState state = new LobbyState();
+        state.save(new Player(8, "구름", 0, 100, 200, Direction.DOWN, false));
+
+        // when
+        state.moveRemote(8, 110, 200, Direction.RIGHT, 0);
+
+        // then
+        assertThat(state.findByPlayerId(8)).isEqualTo(new Player(8, "구름", 0, 110, 200, Direction.RIGHT, true));
+    }
+
+    @Test
+    @DisplayName("MOVED가 끊긴 지 100ms가 안 됐으면 계속 걷는다")
+    void keepsWalkingBeforeIdle() {
+        // given
+        LobbyState state = new LobbyState();
+        state.save(new Player(8, "구름", 0, 100, 200, Direction.DOWN, false));
+        state.moveRemote(8, 110, 200, Direction.RIGHT, 0);
+
+        // when
+        state.stopIdleRemotePlayers(LobbyState.REMOTE_IDLE_MILLS - 1);
+
+        // then
+        assertThat(state.findByPlayerId(8).walking()).isTrue();
+    }
+
+    @Test
+    @DisplayName("MOVED가 100ms 끊기면 마지막 위치와 방향으로 멈춘다")
+    void stopsRemotePlayerWhenIdle() {
+        // given
+        LobbyState state = new LobbyState();
+        state.save(new Player(8, "구름", 0, 100, 200, Direction.DOWN, false));
+        state.moveRemote(8, 110, 200, Direction.RIGHT, 0);
+
+        // when
+        state.stopIdleRemotePlayers(LobbyState.REMOTE_IDLE_MILLS);
+
+        // then
+        assertThat(state.findByPlayerId(8)).isEqualTo(new Player(8, "구름", 0, 110, 200, Direction.RIGHT, false));
+    }
+
+    @Test
+    @DisplayName("다른 플레이어가 멈춰도 걷고 있는 내 고양이는 그대로 둔다")
+    void keepsLocalPlayerWalkingWhenRemoteStops() {
+        // given
+        LobbyState state = new LobbyState();
+        state.welcome(7, List.of());
+        state.save(new Player(7, "모카", 0, 500, 500, Direction.RIGHT, true));
+        state.save(new Player(8, "구름", 0, 100, 200, Direction.DOWN, false));
+        state.moveRemote(8, 110, 200, Direction.RIGHT, 0);
+
+        // when
+        state.stopIdleRemotePlayers(LobbyState.REMOTE_IDLE_MILLS);
+
+        // then
+        assertThat(state.findLocalPlayer().walking()).isTrue();
     }
 }

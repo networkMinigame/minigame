@@ -3,7 +3,9 @@ package networkgame.client.contentpane.lobby;
 import java.awt.Dimension;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import javax.swing.*;
 
@@ -67,6 +69,7 @@ public final class LobbySession {
         // 16ms마다 EDT에서 눌린 방향키에 따라 고양이 위치를 갱신하고 화면을 다시 그리도록 요청합니다.
         Timer frameTimer = new Timer(FRAME_MILLIS, event -> {
             moveLocalPlayer(keys.pressed());
+            state.stopIdleRemotePlayers(nowMillis());
             lobby.renderFrame();
         });
         Timer moveSendTimer = new Timer(MOVED_SEND_MILLIS, event -> sendLocalMove());
@@ -83,6 +86,10 @@ public final class LobbySession {
         client.send(join);
     }
 
+    private static long nowMillis() {
+        return System.nanoTime() / 1_000_000;
+    }
+
     private void handle(ServerMsg message) {
         switch (message) {
             case ServerMsg.Welcome(int id, List<PlayerInfo> playerInfos) -> {
@@ -93,7 +100,7 @@ public final class LobbySession {
             }
             // 아래 메시지는 #35 ~ 38에서 처리합니다.
             case ServerMsg.Left ignored -> {}
-            case ServerMsg.Moved ignored -> {}
+            case ServerMsg.Moved(int id, double x, double y, Direction direction) -> state.moveRemote(id, x, y, direction, nowMillis());
             case ServerMsg.Reject ignored -> {}
             case ServerMsg.Ping ignored -> {}
             case ServerMsg.Chat ignored -> {}
