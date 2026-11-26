@@ -18,7 +18,7 @@ sequenceDiagram
     participant S as Server
 
     M->>S: new Client(host, port) 연결
-    M-->>E: invokeLater(LobbySession.show())
+    M-->>E: invokeLater(LobbyController.show())
     Note over M: 할 일 끝, main 종료
     Note over E: 창 · 타이머 · 방향키 준비
     E-->>R: client.start(콜백)로 Reader · Writer 시작
