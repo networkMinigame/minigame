@@ -1,4 +1,4 @@
-package networkgame.client.contentpane.lobby;
+package networkgame.client.lobby.view;
 
 import java.awt.Color;
 

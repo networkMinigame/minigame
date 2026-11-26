@@ -1,4 +1,4 @@
-package networkgame.client.contentpane.lobby;
+package networkgame.client.lobby.controller;
 
 import java.awt.Dimension;
 import java.awt.event.WindowAdapter;
@@ -12,7 +12,11 @@ import java.util.Set;
 import javax.swing.*;
 
 import networkgame.client.network.Client;
-import networkgame.client.contentpane.lobby.assets.LobbyAssets;
+import networkgame.client.lobby.model.LobbyMovement;
+import networkgame.client.lobby.model.LobbyState;
+import networkgame.client.lobby.model.Player;
+import networkgame.client.lobby.view.LobbyPanel;
+import networkgame.client.lobby.view.assets.LobbyAssets;
 import networkgame.client.input.ArrowKeys;
 import networkgame.protocol.ClientMsg;
 import networkgame.protocol.Direction;

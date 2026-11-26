@@ -1,5 +1,6 @@
-package networkgame.client.contentpane.lobby;
+package networkgame.client.lobby.controller;
 
+import networkgame.client.lobby.model.Player;
 import networkgame.protocol.ClientMsg;
 
 import java.util.function.Consumer;

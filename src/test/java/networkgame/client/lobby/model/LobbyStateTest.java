@@ -1,4 +1,4 @@
-package networkgame.client.contentpane.lobby;
+package networkgame.client.lobby.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

@@ -1,4 +1,4 @@
-package networkgame.client.contentpane.lobby.assets;
+package networkgame.client.lobby.view.assets;
 
 import networkgame.protocol.Direction;
 

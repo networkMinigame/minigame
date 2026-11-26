@@ -1,4 +1,4 @@
-package networkgame.client.contentpane.lobby;
+package networkgame.client.lobby.model;
 
 import networkgame.protocol.Direction;
 import networkgame.protocol.PlayerInfo;

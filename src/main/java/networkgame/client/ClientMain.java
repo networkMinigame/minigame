@@ -8,9 +8,9 @@ import static networkgame.util.Log.log;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
-import networkgame.client.contentpane.lobby.LobbySession;
-import networkgame.client.contentpane.lobby.assets.LobbyAssetLoader;
-import networkgame.client.contentpane.lobby.assets.LobbyAssets;
+import networkgame.client.lobby.controller.LobbySession;
+import networkgame.client.lobby.view.assets.LobbyAssetLoader;
+import networkgame.client.lobby.view.assets.LobbyAssets;
 import networkgame.client.network.Client;
 
 /**

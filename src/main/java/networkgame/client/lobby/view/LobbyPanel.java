@@ -1,4 +1,4 @@
-package networkgame.client.contentpane.lobby;
+package networkgame.client.lobby.view;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -9,7 +9,9 @@ import java.awt.RenderingHints;
 import java.util.Comparator;
 import javax.swing.JPanel;
 
-import networkgame.client.contentpane.lobby.assets.LobbyAssets;
+import networkgame.client.lobby.model.LobbyState;
+import networkgame.client.lobby.model.Player;
+import networkgame.client.lobby.view.assets.LobbyAssets;
 
 /**
  * 로비 지도와 플레이어들을 그린다. {@link LobbyState}를 읽기만 하고 바꾸지 않는다.
