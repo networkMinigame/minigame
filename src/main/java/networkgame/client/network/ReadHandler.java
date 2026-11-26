@@ -12,12 +12,12 @@ import java.util.function.Consumer;
 import static networkgame.protocol.MessageCodec.decodeServer;
 import static networkgame.util.Log.log;
 
-public class ReadHandler extends ClientHandler {
+class ReadHandler extends ClientHandler {
 
     // 외부로부터 작업을 전달받아 단순히 값을 받고 읽습니다.
     private final Consumer<ServerMsg> onMessage;
 
-    public ReadHandler(Client client, Socket socket, Consumer<ServerMsg> onMessage) {
+    ReadHandler(Client client, Socket socket, Consumer<ServerMsg> onMessage) {
         super(client, socket);
         this.onMessage = onMessage;
     }

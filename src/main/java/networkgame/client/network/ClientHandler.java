@@ -5,7 +5,7 @@ import java.net.Socket;
 
 import static networkgame.util.Log.log;
 
-public abstract class ClientHandler implements Runnable {
+abstract class ClientHandler implements Runnable {
 
     protected final Client client;
     protected final Socket socket;

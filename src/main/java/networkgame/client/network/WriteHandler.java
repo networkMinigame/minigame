@@ -11,11 +11,11 @@ import static java.nio.charset.StandardCharsets.*;
 import static networkgame.protocol.MessageCodec.encode;
 import static networkgame.util.Log.log;
 
-public class WriteHandler extends ClientHandler {
+class WriteHandler extends ClientHandler {
 
     private final BlockingQueue<ClientMsg> sendQueue;
 
-    public WriteHandler(Client client, Socket socket, BlockingQueue<ClientMsg> sendQueue) {
+    WriteHandler(Client client, Socket socket, BlockingQueue<ClientMsg> sendQueue) {
         super(client, socket);
         this.sendQueue = sendQueue;
     }
