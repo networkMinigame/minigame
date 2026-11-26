@@ -24,12 +24,17 @@ public final class LobbySession {
     // 약 60fps.
     private static final int FRAME_MILLIS = 16;
 
+    // 서버 DispatcherLoop의 tick과 같은 주기. 이보다 자주 보내도 서버는 tick마다 마지막 위치만 전달한다.
+    private static final int MOVED_SEND_MILLIS = 33;
+
     private final JFrame window = new JFrame("미니게임 · 로비");
     private final LobbyAssets assets;
     private final LobbyState state = new LobbyState();
     private final LobbyMovement movement;
     private final Client client;
     private final ClientMsg.Join join;
+
+    private final MoveSender moveSender;
 
     /**
      * 창은 {@link #show()}를 불러야 뜬다. 내 고양이는 서버가 {@code WELCOME}을 보낸 뒤에 나타난다.
@@ -46,6 +51,8 @@ public final class LobbySession {
         this.movement = new LobbyMovement(mapWidth, mapHeight);
 
         join = new ClientMsg.Join(name, character);
+
+        this.moveSender = new MoveSender(client::send);
     }
 
     /**
@@ -58,13 +65,17 @@ public final class LobbySession {
         ArrowKeys keys = new ArrowKeys(window);
 
         // 16ms마다 EDT에서 눌린 방향키에 따라 고양이 위치를 갱신하고 화면을 다시 그리도록 요청합니다.
-        Timer timer = new Timer(FRAME_MILLIS, _ -> {
+        Timer frameTimer = new Timer(FRAME_MILLIS, event -> {
             moveLocalPlayer(keys.pressed());
             lobby.renderFrame();
         });
-        stopOnClose(timer);
+        Timer moveSendTimer = new Timer(MOVED_SEND_MILLIS, event -> sendLocalMove());
+
+        stopOnClose(frameTimer, moveSendTimer);
         window.setVisible(true);
-        timer.start();
+
+        frameTimer.start();
+        moveSendTimer.start();
 
         client.start(message ->
                 SwingUtilities.invokeLater(
@@ -91,6 +102,7 @@ public final class LobbySession {
         }
     }
 
+
     // pack()은 내용이 들어간 뒤에, 가운데 놓기는 pack()으로 크기가 정해진 뒤에 해야 해서 이 순서를 지킨다.
     private void configureWindow(JPanel content) {
         window.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -101,16 +113,17 @@ public final class LobbySession {
         window.setLocationRelativeTo(null);
     }
 
-    private void stopOnClose(Timer timer) {
+    private void stopOnClose(Timer ...timers) {
         window.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosed(WindowEvent event) {
-                timer.stop();
+                for (Timer timer : timers) {
+                    timer.stop();
+                }
                 client.close();
             }
         });
     }
-
     private void moveLocalPlayer(Set<Direction> pressed) {
         Player player = state.findLocalPlayer();
         // 1. JOIN > WELCOME > JOINED 까지 수신하고도
@@ -119,5 +132,12 @@ public final class LobbySession {
             return;
         }
         state.save(movement.next(player, pressed));
+    }
+
+    private void sendLocalMove() {
+        Player localPlayer = state.findLocalPlayer();
+        if (localPlayer != null) {
+            moveSender.sendIfChanged(localPlayer);
+        }
     }
 }
