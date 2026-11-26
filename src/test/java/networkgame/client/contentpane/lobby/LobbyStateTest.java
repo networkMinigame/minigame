@@ -193,4 +193,39 @@ class LobbyStateTest {
         // then
         assertThat(state.findLocalPlayer().walking()).isTrue();
     }
+
+    @Test
+    @DisplayName("퇴장한 플레이어를 제거해도 다른 참가자는 로비에 남는다")
+    void preservesOtherPlayersOnLeave() {
+        // given
+        LobbyState state = new LobbyState();
+        Player departed = new Player(7, "모카", 0, 100, 200, Direction.DOWN, false);
+        Player remaining = new Player(8, "구름", 0, 200, 300, Direction.LEFT, false);
+        state.save(departed);
+        state.save(remaining);
+
+        // when
+        state.removeByPlayerId(departed.playerId());
+
+        // then
+        assertThat(state.findAll()).containsExactly(remaining);
+    }
+
+    @Test
+    @DisplayName("이미 퇴장한 플레이어를 다시 제거해도 남은 참가자는 유지된다")
+    void ignoresRepeatedRemoval() {
+        // given
+        LobbyState state = new LobbyState();
+        Player departed = new Player(7, "모카", 0, 100, 200, Direction.DOWN, false);
+        Player remaining = new Player(8, "구름", 0, 200, 300, Direction.LEFT, false);
+        state.save(departed);
+        state.save(remaining);
+        state.removeByPlayerId(departed.playerId());
+
+        // when
+        state.removeByPlayerId(departed.playerId());
+
+        // then
+        assertThat(state.findAll()).containsExactly(remaining);
+    }
 }

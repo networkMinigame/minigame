@@ -90,6 +90,7 @@ public final class LobbySession {
         return System.nanoTime() / 1_000_000;
     }
 
+    /** 서버 메시지를 EDT에서 로비 상태에 반영한다. 화면은 다음 타이머 프레임에 갱신된다. */
     private void handle(ServerMsg message) {
         switch (message) {
             case ServerMsg.Welcome(int id, List<PlayerInfo> playerInfos) -> {
@@ -98,11 +99,11 @@ public final class LobbySession {
             case ServerMsg.Joined(PlayerInfo playerInfo) -> {
                 state.save(Player.from(playerInfo));
             }
+            case ServerMsg.Left(int id) -> state.removeByPlayerId(id);
             // 아래 메시지는 #35 ~ 38에서 처리합니다.
-            case ServerMsg.Left ignored -> {}
             case ServerMsg.Moved(int id, double x, double y, Direction direction) -> state.moveRemote(id, x, y, direction, nowMillis());
             case ServerMsg.Reject ignored -> {}
-            case ServerMsg.Ping ignored -> {}
+            case ServerMsg.Ping ignored -> {} // Reader에서 PONG 응답을 처리한다.
             case ServerMsg.Chat ignored -> {}
             case ServerMsg.ReadyState ignored -> {}
             case ServerMsg.Start ignored -> {}
