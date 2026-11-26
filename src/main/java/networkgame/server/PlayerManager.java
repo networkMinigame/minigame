@@ -10,6 +10,9 @@ import java.util.*;
 /** 입장자 목록을 관리한다. DispatcherLoop 스레드에서만 사용한다. */
 final class PlayerManager {
     private static final int MAX_PLAYERS = 4;
+
+    /** 입장 시 배정할 고양이 번호 순서. 0~3은 각각 player1~player4 그림에 대응한다. */
+    private static final int[] CHARACTER_ORDER = {0, 1, 2, 3};
     private static final int SPAWN_X = 836;
     private static final int SPAWN_Y = 470;
     private static final int SPAWN_SPACING = 120;
@@ -26,19 +29,19 @@ final class PlayerManager {
     private final Set<Long> movedSessionIds = new LinkedHashSet<>();
 
     /**
-     * 빈 ID를 배정하고 새 플레이어를 등록한다.
+     * 빈 ID와 사용하지 않는 첫 고양이 번호를 배정하고 새 플레이어를 등록한다.
      *
      * @param sessionId 입장하려는 세션의 식별자
      * @param name 입장 요청에 담긴 플레이어 이름
-     * @param character 입장 요청에 담긴 캐릭터 번호
      * @return 등록한 플레이어. 이미 입장했거나 정원이 찼으면 {@code null}
      */
-    PlayerInfo register(long sessionId, String name, int character) {
+    PlayerInfo register(long sessionId, String name) {
         if (players.containsKey(sessionId) || players.size() == MAX_PLAYERS) {
             return null;
         }
 
         int id = availableId();
+        int character = availableCharacter();
         PlayerInfo player = new PlayerInfo(id, name, character,
                 SPAWN_X + id * SPAWN_SPACING, SPAWN_Y, Direction.DOWN);
         players.put(sessionId, player);
@@ -104,6 +107,29 @@ final class PlayerManager {
     /** 입장한 플레이어의 세션 식별자를 등록 순서대로 모아 반환한다. */
     List<Long> sessionIds() {
         return List.copyOf(players.keySet());
+    }
+
+    /**
+     * 배정 순서에서 현재 사용하지 않는 첫 고양이 번호를 반환한다.
+     * 빈자리가 있을 때 호출하며, 플레이어 목록은 변경하지 않는다.
+     *
+     * @throws IllegalStateException 배정 가능한 고양이가 없는 경우
+     */
+    private int availableCharacter() {
+        Collection<PlayerInfo> joinedPlayers = players.values();
+        for (int character : CHARACTER_ORDER) {
+            boolean used = false;
+            for (PlayerInfo player : joinedPlayers) {
+                if (player.character() == character) {
+                    used = true;
+                    break;
+                }
+            }
+            if (!used) {
+                return character;
+            }
+        }
+        throw new IllegalStateException("배정 가능한 고양이가 없습니다.");
     }
 
     /** 현재 비어 있는 ID 중 가장 작은 값을 반환한다. 빈자리가 있을 때 호출한다. */

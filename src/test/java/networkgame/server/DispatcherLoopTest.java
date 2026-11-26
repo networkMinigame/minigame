@@ -36,7 +36,7 @@ class DispatcherLoopTest {
             assertThat(welcome.players()).singleElement().satisfies(player -> {
                 assertThat(player.id()).isEqualTo(welcome.id());
                 assertThat(player.name()).isEqualTo("모카");
-                assertThat(player.character()).isEqualTo(2);
+                assertThat(player.character()).isZero();
             });
         });
     }
