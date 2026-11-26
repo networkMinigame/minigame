@@ -25,7 +25,7 @@ final class LobbyMovement {
      * @param mapHeight 지도 그림의 높이(px)
      */
     LobbyMovement(int mapWidth, int mapHeight) {
-        int size = LobbyStyle.SPRITE_SIZE;
+        int size = Player.CAT_SIZE;
         this.minX = size / 2.0;
         this.maxX = mapWidth - size / 2.0;
         this.minY = size + 32;

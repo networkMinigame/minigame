@@ -74,7 +74,7 @@ class LobbyMovementTest {
     void staysInsideMap() {
         // given
         LobbyMovement movement = new LobbyMovement(1000, 1000);
-        double leftEdge = LobbyStyle.SPRITE_SIZE / 2.0;
+        double leftEdge = Player.CAT_SIZE / 2.0;
         Player player = new Player(1, "모카", 0, leftEdge, 500, Direction.DOWN, false);
 
         // when

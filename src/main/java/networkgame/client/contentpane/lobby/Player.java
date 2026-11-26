@@ -20,6 +20,9 @@ record Player(int playerId,
               Direction direction,
               boolean walking) {
 
+    /** 고양이가 지도에서 차지하는 한 변 길이(지도 px). 이동 범위 계산과 화면 그리기가 같은 값을 쓴다. */
+    static final int CAT_SIZE = 104;
+
     /**
      * 좌표와 방향만 바꾼 플레이어를 돌려준다.
      * <p>걷기 상태는 좌표가 바뀌었는지로 정한다. 같은 좌표를 넘기면 멈춘 그림이 된다.

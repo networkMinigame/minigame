@@ -87,7 +87,7 @@ final class LobbyPanel extends JPanel {
 
     // 좌표가 고양이 발밑 가운데라서 그림의 왼쪽 위는 (x - 반 폭, y - 높이)다.
     private void drawSprite(Graphics2D canvas, Player player) {
-        int size = LobbyStyle.SPRITE_SIZE;
+        int size = Player.CAT_SIZE;
         int x = (int) Math.round(player.x());
         int y = (int) Math.round(player.y());
         canvas.drawImage(assets.sprite(player.character(), player.direction(), player.walking(),
@@ -99,7 +99,7 @@ final class LobbyPanel extends JPanel {
         int y = (int) Math.round(player.y());
         int width = canvas.getFontMetrics().stringWidth(player.name()) + LABEL_PADDING_X * 2;
         int left = x - width / 2;
-        int top = y - LobbyStyle.SPRITE_SIZE - LABEL_RISE;
+        int top = y - Player.CAT_SIZE - LABEL_RISE;
         canvas.setColor(LABEL_BACKGROUND);
         canvas.fillRoundRect(left, top, width, LABEL_HEIGHT, LABEL_CORNER, LABEL_CORNER);
         canvas.setColor(LobbyStyle.PAPER);
