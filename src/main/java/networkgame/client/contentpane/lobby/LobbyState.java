@@ -11,7 +11,7 @@ import networkgame.protocol.PlayerInfo;
 /**
  * 로비에 그릴 플레이어 상태. EDT에서만 읽고 바꾼다. 네트워크 스레드는 {@code invokeLater}로 넘겨서 바꾼다.
  */
-final class LobbyState {
+public final class LobbyState {
 
     // playerId → Player. 목록을 들어온 순서대로 돌려주려고 LinkedHashMap을 쓴다.
     private final Map<Integer, Player> players = new LinkedHashMap<>();
@@ -25,7 +25,7 @@ final class LobbyState {
     private final Map<Integer, Long> lastMovedMills = new HashMap<>();
 
 
-    void welcome(int localPlayerId, List<PlayerInfo> playerInfos) {
+    public void welcome(int localPlayerId, List<PlayerInfo> playerInfos) {
         this.localPlayerId = localPlayerId;
 
         for (PlayerInfo playerInfo : playerInfos) {
@@ -41,7 +41,7 @@ final class LobbyState {
         players.computeIfPresent(playerId, (id, player) -> player.moveTo(x, y, direction));
     }
 
-    void moveRemote(int playerId, double x, double y, Direction direction, long nowMillis) {
+    public void moveRemote(int playerId, double x, double y, Direction direction, long nowMillis) {
         if (!players.containsKey(playerId)) {
             return;
         }
@@ -53,7 +53,7 @@ final class LobbyState {
     /**
      * 플레이어를 넣는다. 같은 {@code playerId}가 이미 있으면 덮어쓰고, 목록 순서는 처음 들어온 자리를 유지한다.
      */
-    void save(Player player) {
+    public void save(Player player) {
         players.put(player.playerId(), player);
     }
 
@@ -68,7 +68,7 @@ final class LobbyState {
      *
      * @return 내 플레이어. WELCOME을 받기 전이면 {@code null}
      */
-    Player findLocalPlayer() {
+    public Player findLocalPlayer() {
         return localPlayerId == null ? null : players.get(localPlayerId);
     }
 
@@ -86,7 +86,7 @@ final class LobbyState {
      *
      * @return 지금 목록을 복사한 리스트. 고칠 수 없고, 나중에 상태가 바뀌어도 달라지지 않는다
      */
-    List<Player> findAll() {
+    public List<Player> findAll() {
         return List.copyOf(players.values());
     }
 
