@@ -39,12 +39,16 @@ public class WriteHandler extends SessionHandler {
         BufferedOutputStream out = new BufferedOutputStream(socket.getOutputStream());
 
         while (true) {
-            String outputMessage = MessageCodec.encode(sendQueue.take());
+            ServerMsg message = sendQueue.take();
+            String outputMessage = MessageCodec.encode(message);
 
             out.write(outputMessage.getBytes(UTF_8));
             out.write('\n');
             out.flush();
             log(outputMessage);
+            if (message instanceof ServerMsg.Reject) {
+                return; // SessionHandler의 finally에서 전송 완료 후 연결을 닫는다.
+            }
         }
     }
 }

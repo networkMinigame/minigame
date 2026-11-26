@@ -102,7 +102,14 @@ public final class LobbySession {
             case ServerMsg.Left(int id) -> state.removeByPlayerId(id);
             // 아래 메시지는 #35 ~ 38에서 처리합니다.
             case ServerMsg.Moved(int id, double x, double y, Direction direction) -> state.moveRemote(id, x, y, direction, nowMillis());
-            case ServerMsg.Reject ignored -> {}
+            case ServerMsg.Reject reject -> {
+                String reason = switch (reject.reason()) {
+                    case FULL -> "로비 정원이 가득 찼습니다.";
+                    case NAME_TAKEN -> "이미 사용 중인 이름입니다. 이름을 변경한 뒤 다시 접속해 주세요.";
+                };
+                JOptionPane.showMessageDialog(window, reason, "입장 거절", JOptionPane.WARNING_MESSAGE);
+                window.dispose();
+            }
             case ServerMsg.Ping ignored -> {} // Reader에서 PONG 응답을 처리한다.
             case ServerMsg.Chat ignored -> {}
             case ServerMsg.ReadyState ignored -> {}

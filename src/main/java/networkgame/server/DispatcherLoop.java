@@ -20,6 +20,7 @@ public final class DispatcherLoop implements Runnable {
     private final PlayerManager playerManager = new PlayerManager();
     private final SessionManager sessionManager;
     private Long lastPingMillis;
+    private final java.util.Set<Long> rejectedSessions = new java.util.HashSet<>();
     // DispatcherLoop 스레드만 접근한다. JOIN 시각을 첫 응답 대기의 기준으로 사용한다.
     private final Map<Long, Long> lastResponseMillisBySession = new HashMap<>();
 
@@ -110,6 +111,7 @@ public final class DispatcherLoop implements Runnable {
      * 이미 처리했거나 JOIN하지 않은 연결의 종료에는 알림을 보내지 않는다.
      */
     private void leave(long sessionId) {
+        rejectedSessions.remove(sessionId);
         lastResponseMillisBySession.remove(sessionId);
         PlayerInfo departed = playerManager.remove(sessionId);
         sessionManager.remove(sessionId);
@@ -125,6 +127,9 @@ public final class DispatcherLoop implements Runnable {
 
     /** 입장과 PONG을 처리한다. 다른 메시지는 후속 기능에서 처리한다. */
     private void handle(long sessionId, ClientMsg message, long nowMillis) {
+        if (rejectedSessions.contains(sessionId) || !sessionManager.contains(sessionId)) {
+            return;
+        }
         switch (message) {
             case ClientMsg.Join join -> join(sessionId, join, nowMillis);
             case ClientMsg.Move move -> playerManager.move(
@@ -158,6 +163,15 @@ public final class DispatcherLoop implements Runnable {
 
     /** 입장에 성공하면 본인에게 전체 목록을 보내고 기존 입장자에게 새 플레이어를 알린다. */
     private void join(long sessionId, ClientMsg.Join message, long nowMillis) {
+        if (playerManager.sessionIds().contains(sessionId)) {
+            return;
+        }
+        networkgame.protocol.RejectReason reason = playerManager.rejectionReason(message.name());
+        if (reason != null) {
+            rejectedSessions.add(sessionId);
+            sessionManager.reject(sessionId, reason);
+            return;
+        }
         PlayerInfo player = playerManager.register(sessionId, message.name(), message.character());
         if (player == null) {
             return;

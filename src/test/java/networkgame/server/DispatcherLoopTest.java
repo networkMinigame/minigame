@@ -164,7 +164,7 @@ class DispatcherLoopTest {
         sessionManager.receive(0, new ClientMsg.Move(310, 400, Direction.RIGHT));
 
         // when
-        dispatcherLoop.tick();
+        dispatcherLoop.tick(0);
 
         // then
         assertThat(other).containsExactly(new ServerMsg.Moved(0, 310, 400, Direction.RIGHT));
@@ -602,6 +602,34 @@ class DispatcherLoopTest {
         assertThat(dispatcherLoop.lastResponseMillis(200)).isNull();
     }
 
+    @Test
+    @DisplayName("다섯 번째 참가자는 정원 초과로 거절된다")
+    void rejectsFifth() {
+        // given
+        for (int id = 0; id < 4; id++) { connect(id); join(id, "참가자" + id, 0); }
+        List<ServerMsg> responses = connect(500);
+
+        // when
+        join(500, "새참가자", 0);
+
+        // then
+        assertThat(responses).containsExactly(new ServerMsg.Reject(networkgame.protocol.RejectReason.FULL));
+    }
+
+    @Test
+    @DisplayName("같은 이름의 참가자는 이름 중복으로 거절된다")
+    void rejectsDuplicateName() {
+        // given
+        connect(0); join(0, "모카", 0);
+        List<ServerMsg> responses = connect(500);
+
+        // when
+        join(500, "모카", 0);
+
+        // then
+        assertThat(responses).containsExactly(new ServerMsg.Reject(networkgame.protocol.RejectReason.NAME_TAKEN));
+    }
+
     private List<ServerMsg> connect(long sessionId) {
         List<ServerMsg> responses = new ArrayList<>();
         sessionManager.register(sessionId, new Session(new Socket(), 0L, sessionManager) {
@@ -629,6 +657,6 @@ class DispatcherLoopTest {
 
     private void move(long sessionId, double x, double y, Direction direction) {
         sessionManager.receive(sessionId, new ClientMsg.Move(x, y, direction));
-        dispatcherLoop.tick();
+        dispatcherLoop.tick(0);
     }
 }

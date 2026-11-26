@@ -79,6 +79,21 @@ final class PlayerManager {
         return players.remove(sessionId);
     }
 
+    /** 입장 가능한지 검사한다. 정원 초과를 이름 중복보다 우선 판정한다. */
+    networkgame.protocol.RejectReason rejectionReason(String name) {
+        if (players.size() >= MAX_PLAYERS) {
+            return networkgame.protocol.RejectReason.FULL;
+        }
+        Collection<PlayerInfo> joinedPlayers = players.values();
+        for (PlayerInfo player : joinedPlayers) {
+            String joinedName = player.name();
+            if (joinedName.equals(name)) {
+                return networkgame.protocol.RejectReason.NAME_TAKEN;
+            }
+        }
+        return null;
+    }
+
     /** 현재 입장자 정보를 등록 순서대로 복사해 반환한다. */
     List<PlayerInfo> players() {
         return List.copyOf(players.values());
