@@ -1,5 +1,6 @@
 package networkgame.server;
 
+import networkgame.lobby.LobbyWalkArea;
 import networkgame.protocol.RejectReason;
 
 import networkgame.protocol.Direction;
@@ -17,12 +18,7 @@ final class PlayerManager {
     private static final int SPAWN_Y = 470;
     private static final int SPAWN_SPACING = 120;
 
-    // 클라이언트 LobbyMovement와 같은 범위. 지도 map/lobby.png(1672x941)와 고양이 그림 크기(104px)로 계산한 값이다.
-    // 좌우는 그림 반 폭(52)만큼 안쪽, 위는 그림 높이와 이름표(104 + 32)만큼 아래까지다.
-    private static final double MIN_X = 52;
-    private static final double MAX_X = 1620;
-    private static final double MIN_Y = 136;
-    private static final double MAX_Y = 941;
+    private final LobbyWalkArea walkArea = LobbyWalkArea.standard();
 
     private final Map<Long, PlayerInfo> players = new LinkedHashMap<>();
 
@@ -49,11 +45,15 @@ final class PlayerManager {
     }
 
     /**
-     * 입장한 플레이어의 위치와 방향을 바꾸고 MOVED를 보낼 대상으로 표시한다.
+     * 마지막으로 승인한 위치부터 요청한 좌표까지 흙길 위에 있을 때만 이동을 반영한다.
+     * 위치나 방향이 바뀌면 MOVED를 보낼 대상으로 표시한다.
      */
     void move(long sessionId, double x, double y, Direction direction) {
         PlayerInfo playerInfo = players.get(sessionId);
         if (playerInfo == null) {
+            return;
+        }
+        if (!walkArea.canMove(playerInfo.x(), playerInfo.y(), x, y)) {
             return;
         }
 
@@ -61,8 +61,8 @@ final class PlayerManager {
                 playerInfo.id(),
                 playerInfo.name(),
                 playerInfo.character(),
-                Math.clamp(x, MIN_X, MAX_X),
-                Math.clamp(y, MIN_Y, MAX_Y),
+                x,
+                y,
                 direction
         );
         if (movePlayerInfo.equals(playerInfo)) {
