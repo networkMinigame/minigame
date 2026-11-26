@@ -11,6 +11,7 @@ import javax.swing.SwingUtilities;
 import networkgame.client.contentpane.lobby.LobbySession;
 import networkgame.client.contentpane.lobby.assets.LobbyAssetLoader;
 import networkgame.client.contentpane.lobby.assets.LobbyAssets;
+import networkgame.client.network.Client;
 
 /**
  * 클라이언트 실행 진입점. 로비 그림을 읽고 서버에 연결한 뒤 로비 창을 띄운다.

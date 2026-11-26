@@ -1,4 +1,4 @@
-package networkgame.client;
+package networkgame.client.network;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

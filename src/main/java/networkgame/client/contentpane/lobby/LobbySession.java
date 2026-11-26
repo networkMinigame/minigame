@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.Set;
 import javax.swing.*;
 
-import networkgame.client.Client;
+import networkgame.client.network.Client;
 import networkgame.client.contentpane.lobby.assets.LobbyAssets;
 import networkgame.client.input.ArrowKeys;
 import networkgame.protocol.ClientMsg;
