@@ -20,7 +20,7 @@ public record Player(int playerId,
               Direction direction,
               boolean walking) {
 
-    /** 고양이가 지도에서 차지하는 한 변 길이(지도 px). 이동 범위 계산과 화면 그리기가 같은 값을 쓴다. */
+    /** 화면에 그리는 고양이의 한 변 길이(지도 px). */
     public static final int CAT_SIZE = 104;
 
     /**

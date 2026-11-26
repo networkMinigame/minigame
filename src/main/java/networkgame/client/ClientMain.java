@@ -12,6 +12,7 @@ import networkgame.client.lobby.controller.LobbyController;
 import networkgame.client.lobby.view.assets.LobbyAssetLoader;
 import networkgame.client.lobby.view.assets.LobbyAssets;
 import networkgame.client.network.Client;
+import networkgame.lobby.LobbyWalkArea;
 
 /**
  * 클라이언트 실행 진입점. 로비 그림을 읽고 서버에 연결한 뒤 로비 창을 띄운다.
@@ -48,6 +49,7 @@ public class ClientMain {
             return;
         }
 
+        LobbyWalkArea walkArea = LobbyWalkArea.standard();
         Client client;
         try {
             client = new Client(HOST, PORT);
@@ -58,7 +60,7 @@ public class ClientMain {
         }
 
         SwingUtilities.invokeLater(() -> {
-            new LobbyController(assets, client, playerName, CHARACTER_INDEX).show();
+            new LobbyController(assets, walkArea, client, playerName, CHARACTER_INDEX).show();
         });
     }
 
