@@ -9,12 +9,13 @@ import networkgame.server.SessionManager.Event;
 import java.util.HashMap;
 import java.util.Map;
 
-
+import static networkgame.util.Log.log;
 
 /** 한 스레드에서 로비 요청을 처리하고 세션별 응답을 보낸다. */
 public final class DispatcherLoop implements Runnable {
     private static final long TICK_MILLIS = 33;
     private static final long PING_INTERVAL_MILLIS = 3_000;
+    private static final long RESPONSE_TIMEOUT_MILLIS = 10_000;
 
     private final PlayerManager playerManager = new PlayerManager();
     private final SessionManager sessionManager;
@@ -55,7 +56,24 @@ public final class DispatcherLoop implements Runnable {
      */
     void tick(long nowMillis) {
         processPendingEvents(nowMillis);
+        disconnectTimedOut(nowMillis);
         sendPingIfDue(nowMillis);
+    }
+
+    /** 응답 이후 10초가 지난 연결을 닫고 퇴장시킨다. 뒤늦은 LEAVE는 기존 퇴장 처리에서 무시한다. */
+    private void disconnectTimedOut(long nowMillis) {
+        for (long sessionId : java.util.List.copyOf(lastResponseMillisBySession.keySet())) {
+            long lastResponse = lastResponseMillisBySession.get(sessionId);
+            if (nowMillis - lastResponse >= RESPONSE_TIMEOUT_MILLIS) {
+                try {
+                    sessionManager.closeSession(sessionId);
+                } catch (RuntimeException error) {
+                    log("타임아웃" + " 세션 종료 실패 " + sessionId + " " + error.getMessage());
+                } finally {
+                    leave(sessionId);
+                }
+            }
+        }
     }
 
     /** 첫 주기를 기준으로 3초마다 입장자에게 PING을 보낸다. 지연된 주기를 몰아서 보내지 않는다. */

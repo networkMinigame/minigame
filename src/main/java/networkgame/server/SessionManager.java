@@ -47,6 +47,14 @@ public final class SessionManager {
         sessions.remove(sessionId);
     }
 
+    /** 지정한 연결을 닫는다. 이미 제거된 연결이면 아무 작업도 하지 않는다. */
+    void closeSession(long sessionId) {
+        Session session = sessions.get(sessionId);
+        if (session != null) {
+            session.close();
+        }
+    }
+
     /** 등록된 세션의 전송 큐에 응답을 넣는다. */
     void send(long sessionId, ServerMsg message) {
         Session session = sessions.get(sessionId);

@@ -498,6 +498,110 @@ class DispatcherLoopTest {
         assertThat(dispatcherLoop.lastResponseMillis(100)).isNull();
     }
 
+    @Test
+    @DisplayName("10초 직전에는 연결을 유지한다")
+    void keepsBeforeTimeout() {
+        // given
+        java.util.concurrent.atomic.AtomicBoolean closed = new java.util.concurrent.atomic.AtomicBoolean();
+        sessionManager.register(100, new Session(new Socket(), 100, sessionManager) {
+            @Override public void send(ServerMsg message) {}
+            @Override public void close() { closed.set(true); }
+        });
+        join(100, "모카", 0);
+
+
+        // when
+        dispatcherLoop.tick(9999);
+
+        // then
+        assertThat(closed.get()).isFalse();
+    }
+
+    @Test
+    @DisplayName("응답 없이 10초가 지나면 연결을 닫는다")
+    void closesAtTimeout() {
+        // given
+        java.util.concurrent.atomic.AtomicBoolean closed = new java.util.concurrent.atomic.AtomicBoolean();
+        sessionManager.register(100, new Session(new Socket(), 100, sessionManager) {
+            @Override public void send(ServerMsg message) {}
+            @Override public void close() { closed.set(true); }
+        });
+        join(100, "모카", 0);
+
+
+        // when
+        dispatcherLoop.tick(10000);
+
+        // then
+        assertThat(closed.get()).isTrue();
+    }
+
+    @Test
+    @DisplayName("PONG을 받으면 응답 대기 시간을 다시 센다")
+    void pongExtendsTimeout() {
+        // given
+        java.util.concurrent.atomic.AtomicBoolean closed = new java.util.concurrent.atomic.AtomicBoolean();
+        sessionManager.register(100, new Session(new Socket(), 100, sessionManager) {
+            @Override public void send(ServerMsg message) {}
+            @Override public void close() { closed.set(true); }
+        });
+        join(100, "모카", 0);
+        sessionManager.receive(100, new ClientMsg.Pong(3000));
+        dispatcherLoop.tick(9000);
+
+        // when
+        dispatcherLoop.tick(10000);
+
+        // then
+        assertThat(closed.get()).isFalse();
+    }
+
+    @Test
+    @DisplayName("타임아웃 퇴장은 LEFT를 한 번만 알린다")
+    void notifiesTimeoutOnce() {
+        // given
+        connect(100);
+        join(100, "모카", 0);
+        List<ServerMsg> remaining = connect(200);
+        join(200, "구름", 1);
+        sessionManager.receive(200, new ClientMsg.Pong(0));
+        dispatcherLoop.tick(9_000);
+        remaining.clear();
+
+        // when
+        dispatcherLoop.tick(10_000);
+        sessionManager.leave(100);
+        dispatcherLoop.tick(10_001);
+
+        // then
+        assertThat(remaining).containsExactly(new ServerMsg.Left(0));
+    }
+
+    @Test
+    @DisplayName("한 연결의 종료가 실패해도 다른 시간 초과 연결을 정리한다")
+    void continuesAfterCloseFailure() {
+        // given
+        sessionManager.register(100, new Session(new Socket(), 100, sessionManager) {
+            @Override public void send(ServerMsg message) {}
+            @Override public void close() { throw new IllegalStateException("종료 실패"); }
+        });
+        join(100, "모카", 0);
+        java.util.concurrent.atomic.AtomicBoolean closed = new java.util.concurrent.atomic.AtomicBoolean();
+        sessionManager.register(200, new Session(new Socket(), 200, sessionManager) {
+            @Override public void send(ServerMsg message) {}
+            @Override public void close() { closed.set(true); }
+        });
+        join(200, "구름", 1);
+
+        // when
+        dispatcherLoop.tick(10_000);
+
+        // then
+        assertThat(closed.get()).isTrue();
+        assertThat(dispatcherLoop.lastResponseMillis(100)).isNull();
+        assertThat(dispatcherLoop.lastResponseMillis(200)).isNull();
+    }
+
     private List<ServerMsg> connect(long sessionId) {
         List<ServerMsg> responses = new ArrayList<>();
         sessionManager.register(sessionId, new Session(new Socket(), 0L, sessionManager) {
