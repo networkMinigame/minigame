@@ -34,7 +34,7 @@ sequenceDiagram
 
 - **연결은 `main`에서**: 서버가 없으면 몇 초 기다릴 수 있어서 EDT에서 하지 않는다. 실패하면 대화상자를 띄우고 여기서 끝난다
 - **Reader를 창보다 늦게 시작**: 첫 `WELCOME`이 왔을 때 반영할 창과 상태가 이미 있어야 한다
-- **다른 참가자의 퇴장**: Reader가 받은 `LEFT id`도 같은 콜백으로 EDT에 전달한다. `LobbySession`이 해당 ID를 로비 상태에서 제거하면 다음 타이머 프레임부터 그리지 않는다. 이미 없는 ID는 무시한다.
+- **다른 참가자의 퇴장**: Reader가 받은 `LEFT id`도 같은 콜백으로 EDT에 전달한다. `LobbyController`가 해당 ID를 로비 상태에서 제거하면 다음 타이머 프레임부터 그리지 않는다. 이미 없는 ID는 무시한다.
 - **화면 반영은 항상 EDT**: Reader는 `invokeLater`로 넘기기만 한다. `WELCOME` 전에는 내 고양이가 없어서 타이머가 이동을 건너뛴다
 
 ## 창 닫기
@@ -63,7 +63,7 @@ sequenceDiagram
 ## 연결 끊김과 재연결
 
 Reader 또는 Writer가 끝나면 Client.close()의 CAS를 통과한 한 번의 종료만 콜백으로 전달한다.
-LobbySession은 콜백을 EDT로 넘기고 이동 전송·프레임 타이머를 중단한다.
+LobbyController는 콜백을 EDT로 넘기고 이동 전송·프레임 타이머를 중단한다.
 사용자가 창을 닫았거나 REJECT를 받은 경우에는 추가 연결 종료 안내를 생략한다.
 
 연결 종료 안내는 확인과 재연결 시도 버튼을 제공한다. 확인은 창을 닫는다.
