@@ -70,7 +70,7 @@ public final class LobbyController {
      * 창을 닫으면 멈추고 연결을 닫는다.
      */
     public void show() {
-        LobbyView lobby = new LobbyView(state, assets);
+        LobbyView lobby = new LobbyView(state::findAll, assets);
         configureWindow(lobby);
         ArrowKeys keys = new ArrowKeys(window);
 

@@ -7,14 +7,15 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.util.Comparator;
+import java.util.List;
+import java.util.function.Supplier;
 import javax.swing.JPanel;
 
-import networkgame.client.lobby.model.LobbyState;
 import networkgame.client.lobby.model.Player;
 import networkgame.client.lobby.view.assets.LobbyAssets;
 
 /**
- * 로비 지도와 플레이어들을 그린다. {@link LobbyState}를 읽기만 하고 바꾸지 않는다.
+ * 로비 지도와 플레이어들을 그린다. 플레이어 목록은 읽기 함수로만 받아서 상태를 바꿀 수 없다.
  * <p>지도는 비율을 유지한 채 패널에 꽉 차게 늘리거나 줄이고, 남는 곳은 배경색으로 둔다.
  */
 public final class LobbyView extends JPanel {
@@ -33,12 +34,13 @@ public final class LobbyView extends JPanel {
     // INK에 투명도 225를 준 색.
     private static final Color LABEL_BACKGROUND = new Color(36, 59, 50, 225);
 
-    private final LobbyState state;
+    // 그릴 때마다 부른다. 부를 때마다 그 시점의 목록 복사본을 돌려준다.
+    private final Supplier<List<Player>> players;
     private final LobbyAssets assets;
     private long animationTick;
 
-    public LobbyView(LobbyState state, LobbyAssets assets) {
-        this.state = state;
+    public LobbyView(Supplier<List<Player>> players, LobbyAssets assets) {
+        this.players = players;
         this.assets = assets;
         setBackground(LobbyStyle.INK);
         setPreferredSize(PREFERRED_SIZE);
@@ -79,7 +81,7 @@ public final class LobbyView extends JPanel {
     // 앞(아래)에 선 고양이가 뒤 고양이를 가리도록 y가 작은 순서대로 그린다.
     private void drawPlayers(Graphics2D canvas) {
         canvas.setFont(getFont().deriveFont(Font.BOLD, NAME_FONT_SIZE));
-        state.findAll().stream()
+        players.get().stream()
                 .sorted(Comparator.comparingDouble(Player::y))
                 .forEach(player -> {
                     drawSprite(canvas, player);
