@@ -11,17 +11,33 @@ import static java.nio.charset.StandardCharsets.*;
 import static networkgame.protocol.MessageCodec.encode;
 import static networkgame.util.Log.log;
 
-class WriteHandler extends ClientHandler {
+class WriteHandler implements Runnable {
 
+    private final Client client;
+    private final Socket socket;
     private final BlockingQueue<ClientMsg> sendQueue;
 
     WriteHandler(Client client, Socket socket, BlockingQueue<ClientMsg> sendQueue) {
-        super(client, socket);
+        this.client = client;
+        this.socket = socket;
         this.sendQueue = sendQueue;
     }
 
+    // 쓰다가 끊기거나 close()가 interrupt로 깨우면 끝나고, 끝나면 연결을 닫는다.
     @Override
-    protected void handle() throws IOException, InterruptedException {
+    public void run() {
+        try {
+            handle();
+        } catch (IOException e) {
+            log("연결 끊김 " + e.getMessage());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } finally {
+            client.close();
+        }
+    }
+
+    private void handle() throws IOException, InterruptedException {
         BufferedOutputStream out = new BufferedOutputStream(socket.getOutputStream());
 
         while (true) {
