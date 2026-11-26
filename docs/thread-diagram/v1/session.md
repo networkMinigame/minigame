@@ -42,6 +42,10 @@ sequenceDiagram
     Q-->>L: 다음 처리 시 Leave 꺼내기
     L->>M: 해당 연결의 입장자 제거
     L->>SM: 해당 연결 제거
+    opt 실제 입장자를 제거한 경우
+        L->>SM: 남은 입장자에게 LEFT 전송 요청
+        SM->>W: 각 sendQueue에 LEFT 넣기
+    end
 ```
 
 - Reader는 마지막 메시지 뒤에 `LEAVE`를 넣는다. DispatcherLoop가 이를 꺼내 로비 목록을 갱신한다. 로비 목록 갱신과 소켓 정리는 각각 진행된다.

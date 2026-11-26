@@ -2,6 +2,9 @@ package networkgame.client;
 
 import com.formdev.flatlaf.FlatLightLaf;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.util.concurrent.atomic.AtomicReference;
+import static networkgame.util.Log.log;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
@@ -15,11 +18,27 @@ import networkgame.client.contentpane.lobby.assets.LobbyAssets;
 public class ClientMain {
     private static final String HOST = "localhost";
     private static final int PORT = 12345;
-    // 접속 화면이 없어서 이름과 고양이는 아직 고정값이다.
-    private static final String PLAYER_NAME = "담비";
     private static final int CHARACTER_INDEX = 0;
 
     public static void main(String[] args) {
+        AtomicReference<String> enteredName = new AtomicReference<>();
+        try {
+            SwingUtilities.invokeAndWait(() -> {
+                FlatLightLaf.setup();
+                enteredName.set(NamePrompt.show());
+            });
+        } catch (InterruptedException error) {
+            Thread.currentThread().interrupt();
+            log("이름 입력 중단 " + error);
+            return;
+        } catch (InvocationTargetException error) {
+            log("이름 입력 실패 " + error.getCause());
+            return;
+        }
+        String playerName = enteredName.get();
+        if (playerName == null) {
+            return;
+        }
         LobbyAssets assets;
         try {
             assets = LobbyAssetLoader.load();
@@ -32,13 +51,13 @@ public class ClientMain {
         try {
             client = new Client(HOST, PORT);
         } catch (IOException e) {
-            showError("서버 연결 실패", HOST + ":" + PORT + "\n" + e.getMessage());
+            log("서버 연결 실패 " + HOST + ":" + PORT + " " + e);
+            showError("서버 연결", "연결 실패");
             return;
         }
 
         SwingUtilities.invokeLater(() -> {
-            FlatLightLaf.setup();
-            new LobbySession(assets, client, PLAYER_NAME, CHARACTER_INDEX).show();
+            new LobbySession(assets, client, playerName, CHARACTER_INDEX).show();
         });
     }
 

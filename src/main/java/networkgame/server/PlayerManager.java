@@ -1,5 +1,7 @@
 package networkgame.server;
 
+import networkgame.protocol.RejectReason;
+
 import networkgame.protocol.Direction;
 import networkgame.protocol.PlayerInfo;
 
@@ -72,10 +74,26 @@ final class PlayerManager {
      * 연결이 끝난 세션을 목록에서 제거한다. 입장 기록이 없으면 그대로 종료한다.
      *
      * @param sessionId 제거할 세션의 식별자
+     * @return 제거한 플레이어. 이미 나갔거나 입장하지 않은 세션이면 {@code null}
      */
-    void remove(long sessionId) {
-        players.remove(sessionId);
+    PlayerInfo remove(long sessionId) {
         movedSessionIds.remove(sessionId);
+        return players.remove(sessionId);
+    }
+
+    /** 입장 가능한지 검사한다. 정원 초과를 이름 중복보다 우선 판정한다. */
+    RejectReason rejectionReason(String name) {
+        if (players.size() >= MAX_PLAYERS) {
+            return RejectReason.FULL;
+        }
+        Collection<PlayerInfo> joinedPlayers = players.values();
+        for (PlayerInfo player : joinedPlayers) {
+            String joinedName = player.name();
+            if (joinedName.equals(name)) {
+                return RejectReason.NAME_TAKEN;
+            }
+        }
+        return null;
     }
 
     /** 현재 입장자 정보를 등록 순서대로 복사해 반환한다. */

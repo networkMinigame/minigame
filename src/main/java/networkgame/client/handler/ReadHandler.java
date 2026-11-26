@@ -2,6 +2,7 @@ package networkgame.client.handler;
 
 import networkgame.client.Client;
 import networkgame.protocol.ServerMsg;
+import networkgame.protocol.ClientMsg;
 import networkgame.util.Utf8LineReader;
 import tools.jackson.core.JacksonException;
 
@@ -22,6 +23,7 @@ public class ReadHandler extends ClientHandler {
         this.onMessage = onMessage;
     }
 
+    /** PING은 Reader에서 전송 큐로 응답하고, 다른 메시지는 화면 쪽 콜백으로 전달한다. */
     @Override
     protected void handle() throws IOException {
         Utf8LineReader in = new Utf8LineReader(socket.getInputStream());
@@ -35,7 +37,11 @@ public class ReadHandler extends ClientHandler {
 
             try {
                 ServerMsg serverMsg = decodeServer(inputMessage);
-                onMessage.accept(serverMsg); // 이미 검증되어서 날아오기 때문
+                if (serverMsg instanceof ServerMsg.Ping(long t)) {
+                    client.send(new ClientMsg.Pong(t));
+                } else {
+                    onMessage.accept(serverMsg);
+                }
             } catch (JacksonException e) { // RuntimeException
                 log("잘못된 서버 메시지 " + e.getOriginalMessage()); // 이 줄만 버리고 계속 읽음
             }

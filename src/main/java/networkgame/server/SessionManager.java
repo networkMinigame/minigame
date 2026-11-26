@@ -1,5 +1,7 @@
 package networkgame.server;
 
+import networkgame.protocol.RejectReason;
+
 import networkgame.protocol.ServerMsg;
 import networkgame.protocol.ClientMsg;
 import java.util.concurrent.BlockingQueue;
@@ -45,6 +47,27 @@ public final class SessionManager {
     /** 종료된 연결을 전송 대상에서 제거한다. */
     void remove(long sessionId) {
         sessions.remove(sessionId);
+    }
+
+    /** 지정한 연결을 닫는다. 이미 제거된 연결이면 아무 작업도 하지 않는다. */
+    void closeSession(long sessionId) {
+        Session session = sessions.get(sessionId);
+        if (session != null) {
+            session.close();
+        }
+    }
+
+    /** 거절 응답을 Writer에 맡긴다. 전체 종료를 위해 연결 등록은 유지한다. Writer는 전송 후 연결을 닫는다. */
+    void reject(long sessionId, RejectReason reason) {
+        Session session = sessions.get(sessionId);
+        if (session != null) {
+            session.send(new ServerMsg.Reject(reason));
+        }
+    }
+
+    /** 등록 여부를 확인한다. 거절 뒤 큐에 남은 요청은 처리하지 않는다. */
+    boolean contains(long sessionId) {
+        return sessions.containsKey(sessionId);
     }
 
     /** 등록된 세션의 전송 큐에 응답을 넣는다. */
