@@ -1,5 +1,7 @@
 package networkgame.server;
 
+import networkgame.protocol.RejectReason;
+
 import networkgame.protocol.ClientMsg;
 import networkgame.protocol.PlayerInfo;
 import networkgame.protocol.ServerMsg;
@@ -7,6 +9,9 @@ import networkgame.protocol.ServerMsg;
 import networkgame.server.SessionManager.Event;
 
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.Map;
 
 import static networkgame.util.Log.log;
@@ -20,7 +25,7 @@ public final class DispatcherLoop implements Runnable {
     private final PlayerManager playerManager = new PlayerManager();
     private final SessionManager sessionManager;
     private Long lastPingMillis;
-    private final java.util.Set<Long> rejectedSessions = new java.util.HashSet<>();
+    private final Set<Long> rejectedSessions = new HashSet<>();
     // DispatcherLoop 스레드만 접근한다. JOIN 시각을 첫 응답 대기의 기준으로 사용한다.
     private final Map<Long, Long> lastResponseMillisBySession = new HashMap<>();
 
@@ -63,7 +68,7 @@ public final class DispatcherLoop implements Runnable {
 
     /** 응답 이후 10초가 지난 연결을 닫고 퇴장시킨다. 뒤늦은 LEAVE는 기존 퇴장 처리에서 무시한다. */
     private void disconnectTimedOut(long nowMillis) {
-        for (long sessionId : java.util.List.copyOf(lastResponseMillisBySession.keySet())) {
+        for (long sessionId : List.copyOf(lastResponseMillisBySession.keySet())) {
             long lastResponse = lastResponseMillisBySession.get(sessionId);
             if (nowMillis - lastResponse >= RESPONSE_TIMEOUT_MILLIS) {
                 try {
@@ -166,7 +171,7 @@ public final class DispatcherLoop implements Runnable {
         if (playerManager.sessionIds().contains(sessionId)) {
             return;
         }
-        networkgame.protocol.RejectReason reason = playerManager.rejectionReason(message.name());
+        RejectReason reason = playerManager.rejectionReason(message.name());
         if (reason != null) {
             rejectedSessions.add(sessionId);
             sessionManager.reject(sessionId, reason);

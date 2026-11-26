@@ -1,5 +1,7 @@
 package networkgame.server;
 
+import networkgame.protocol.RejectReason;
+
 import networkgame.protocol.ServerMsg;
 import networkgame.protocol.ClientMsg;
 import java.util.concurrent.BlockingQueue;
@@ -56,7 +58,7 @@ public final class SessionManager {
     }
 
     /** 거절 응답을 Writer에 맡긴다. 전체 종료를 위해 연결 등록은 유지한다. Writer는 전송 후 연결을 닫는다. */
-    void reject(long sessionId, networkgame.protocol.RejectReason reason) {
+    void reject(long sessionId, RejectReason reason) {
         Session session = sessions.get(sessionId);
         if (session != null) {
             session.send(new ServerMsg.Reject(reason));

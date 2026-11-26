@@ -1,5 +1,7 @@
 package networkgame.server;
 
+import networkgame.protocol.RejectReason;
+
 import networkgame.protocol.Direction;
 import networkgame.protocol.PlayerInfo;
 
@@ -80,15 +82,15 @@ final class PlayerManager {
     }
 
     /** 입장 가능한지 검사한다. 정원 초과를 이름 중복보다 우선 판정한다. */
-    networkgame.protocol.RejectReason rejectionReason(String name) {
+    RejectReason rejectionReason(String name) {
         if (players.size() >= MAX_PLAYERS) {
-            return networkgame.protocol.RejectReason.FULL;
+            return RejectReason.FULL;
         }
         Collection<PlayerInfo> joinedPlayers = players.values();
         for (PlayerInfo player : joinedPlayers) {
             String joinedName = player.name();
             if (joinedName.equals(name)) {
-                return networkgame.protocol.RejectReason.NAME_TAKEN;
+                return RejectReason.NAME_TAKEN;
             }
         }
         return null;

@@ -1,5 +1,8 @@
 package networkgame.server;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+import networkgame.protocol.RejectReason;
+
 import networkgame.protocol.ClientMsg;
 import networkgame.protocol.Direction;
 import networkgame.protocol.PlayerInfo;
@@ -502,7 +505,7 @@ class DispatcherLoopTest {
     @DisplayName("10초 직전에는 연결을 유지한다")
     void keepsBeforeTimeout() {
         // given
-        java.util.concurrent.atomic.AtomicBoolean closed = new java.util.concurrent.atomic.AtomicBoolean();
+        AtomicBoolean closed = new AtomicBoolean();
         sessionManager.register(100, new Session(new Socket(), 100, sessionManager) {
             @Override public void send(ServerMsg message) {}
             @Override public void close() { closed.set(true); }
@@ -521,7 +524,7 @@ class DispatcherLoopTest {
     @DisplayName("응답 없이 10초가 지나면 연결을 닫는다")
     void closesAtTimeout() {
         // given
-        java.util.concurrent.atomic.AtomicBoolean closed = new java.util.concurrent.atomic.AtomicBoolean();
+        AtomicBoolean closed = new AtomicBoolean();
         sessionManager.register(100, new Session(new Socket(), 100, sessionManager) {
             @Override public void send(ServerMsg message) {}
             @Override public void close() { closed.set(true); }
@@ -540,7 +543,7 @@ class DispatcherLoopTest {
     @DisplayName("PONG을 받으면 응답 대기 시간을 다시 센다")
     void pongExtendsTimeout() {
         // given
-        java.util.concurrent.atomic.AtomicBoolean closed = new java.util.concurrent.atomic.AtomicBoolean();
+        AtomicBoolean closed = new AtomicBoolean();
         sessionManager.register(100, new Session(new Socket(), 100, sessionManager) {
             @Override public void send(ServerMsg message) {}
             @Override public void close() { closed.set(true); }
@@ -586,7 +589,7 @@ class DispatcherLoopTest {
             @Override public void close() { throw new IllegalStateException("종료 실패"); }
         });
         join(100, "모카", 0);
-        java.util.concurrent.atomic.AtomicBoolean closed = new java.util.concurrent.atomic.AtomicBoolean();
+        AtomicBoolean closed = new AtomicBoolean();
         sessionManager.register(200, new Session(new Socket(), 200, sessionManager) {
             @Override public void send(ServerMsg message) {}
             @Override public void close() { closed.set(true); }
@@ -613,7 +616,7 @@ class DispatcherLoopTest {
         join(500, "새참가자", 0);
 
         // then
-        assertThat(responses).containsExactly(new ServerMsg.Reject(networkgame.protocol.RejectReason.FULL));
+        assertThat(responses).containsExactly(new ServerMsg.Reject(RejectReason.FULL));
     }
 
     @Test
@@ -627,7 +630,7 @@ class DispatcherLoopTest {
         join(500, "모카", 0);
 
         // then
-        assertThat(responses).containsExactly(new ServerMsg.Reject(networkgame.protocol.RejectReason.NAME_TAKEN));
+        assertThat(responses).containsExactly(new ServerMsg.Reject(RejectReason.NAME_TAKEN));
     }
 
     private List<ServerMsg> connect(long sessionId) {
