@@ -58,7 +58,7 @@ public final class LobbyState {
     }
 
     /** 플레이어 한 명을 목록에서 뺀다. 목록에 없는 {@code playerId}면 아무것도 하지 않는다. */
-    void removeByPlayerId(int playerId) {
+    public void removeByPlayerId(int playerId) {
         players.remove(playerId);
         lastMovedMills.remove(playerId);
     }
